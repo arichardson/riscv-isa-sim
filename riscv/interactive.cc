@@ -274,7 +274,12 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
     processor_t *p = get_core(args[0]);
 
     for (int r = 0; r < NUM_CHERI_REGS; ++r) {
+#ifdef CHERI_MERGED_RF
+      creg = p->get_state()->XPR[r];
+#else
       creg = CHERI_STATE.reg_file[r];
+#endif
+
       fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%016" PRIx64 " | offset: 0x%016" PRIx64
       " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
 
