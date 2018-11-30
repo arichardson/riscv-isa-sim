@@ -114,10 +114,16 @@ void processor_t::step(size_t n, insn_t insn)
          default: abort(); \
        } \
        pc = state.pc; \
+       if (rvfi_dii) { \
+         rvfi_dii_output.rvfi_dii_pc_wdata = pc; \
+       } \
        break; \
      } else { \
        state.pc = pc; \
        instret++; \
+       if (rvfi_dii) { \
+         rvfi_dii_output.rvfi_dii_pc_wdata = pc; \
+       } \
      }
 
     try
@@ -175,9 +181,7 @@ void processor_t::step(size_t n, insn_t insn)
 
           advance_pc();
 
-          if (rvfi_dii) {
-            rvfi_dii_output.rvfi_dii_pc_wdata = pc;
-          } else { // RVFI-DII doesn't have a debug module, so only check if disabled
+          if (!rvfi_dii) { // RVFI-DII doesn't have a debug module, so only check if disabled
             if (unlikely(state.pc >= DEBUG_ROM_ENTRY &&
                          state.pc < DEBUG_END)) {
               // We're waiting for the debugger to tell us something.
