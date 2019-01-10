@@ -35,6 +35,7 @@ cheri_insn_list = \
 	csetbounds \
 	csetboundsexact \
 	csetboundsimmediate \
+	cincoffset \
 	cincoffsetimmediate \
 	ccleartag \
 	cbuildcap \
