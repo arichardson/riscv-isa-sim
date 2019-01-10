@@ -23,6 +23,7 @@ cheri_insn_list = \
 	csetoffset \
 	cgetperm \
 	cgettype \
+	cgetaddr \
 	cgetbase \
 	cgetlen \
 	cgettag \
