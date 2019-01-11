@@ -59,7 +59,13 @@
 #define CS1 STATE.XPR[insn.cs1()]
 #define CS2 STATE.XPR[insn.cs2()]
 
-#define WRITE_CD(val) STATE.XPR.write(insn.cd(), val)
+#define WRITE_CD(val) ({ \
+  STATE.XPR.write(insn.cd(), val); \
+  if (p->rvfi_dii && (insn.cd() != 0)) { \
+    p->rvfi_dii_output.rvfi_dii_rd_wdata = val.base + val.offset; \
+    p->rvfi_dii_output.rvfi_dii_rd_addr = insn.cd(); \
+  } \
+})
 #else
 
 #define NUM_CHERI_REGS 32
@@ -82,7 +88,7 @@
 
 extern const char *cheri_reg_names[32];
 
-/* 256-bit Caps register formant *
+/* 256-bit Caps register format *
  * -------------------------------------------------------------------------
  * | length | base | offset | uperms | perms | S | reserved | otype | Tag  |
  * -------------------------------------------------------------------------
