@@ -145,7 +145,11 @@ public:
   void write(size_t i, reg_t value)
   {
     if (i != 0)
+    {
       data[i].offset = value;
+      data[i].tag = 0;
+      // TODO set a value to all other fields
+    }
   }
   void write(size_t i, cheri_reg_t value)
   {
