@@ -175,6 +175,15 @@ reg_t sim_t::get_pc(const std::vector<std::string>& args)
   return p->get_state()->pc;
 }
 
+reg_t sim_t::get_inst(const std::vector<std::string>& args)
+{
+  if(args.size() != 1)
+    throw trap_interactive();
+
+  processor_t *p = get_core(args[0]);
+  return (reg_t) p->get_mmu()->get_insn(p->get_state()->pc);
+}
+
 void sim_t::interactive_pc(const std::string& cmd, const std::vector<std::string>& args)
 {
   fprintf(stderr, "0x%016" PRIx64 "\n", get_pc(args));
@@ -425,6 +434,7 @@ void sim_t::interactive_until(const std::string& cmd, const std::vector<std::str
 
   auto func = args[0] == "reg" ? &sim_t::get_reg :
               args[0] == "pc"  ? &sim_t::get_pc :
+              args[0] == "inst"  ? &sim_t::get_inst :
               args[0] == "mem" ? &sim_t::get_mem :
               NULL;
 

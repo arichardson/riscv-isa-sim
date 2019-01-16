@@ -402,6 +402,29 @@ public:
     return entry;
   }
 
+  inline insn_bits_t get_insn(reg_t addr)
+  {
+    auto tlb_entry = translate_insn_addr(addr);
+    insn_bits_t insn = *(uint16_t*)(tlb_entry.host_offset + addr);
+    int length = insn_length(insn);
+
+    if (likely(length == 4)) {
+      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 2) << 16;
+    } else if (length == 2) {
+      insn = (int16_t)insn;
+    } else if (length == 6) {
+      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 4) << 32;
+      insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 2) << 16;
+    } else {
+      static_assert(sizeof(insn_bits_t) == 8, "insn_bits_t must be uint64_t");
+      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 6) << 48;
+      insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 4) << 32;
+      insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 2) << 16;
+    }
+
+    return insn;
+  }
+
   inline icache_entry_t* access_icache(reg_t addr)
   {
 #ifdef ENABLE_CHERI
