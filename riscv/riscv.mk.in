@@ -31,6 +31,7 @@ riscv_hdrs = \
 	remote_bitbang.h \
 	jtag_dtm.h \
 	rvfi_dii.h \
+	tags.h \
 
 riscv_precompiled_hdrs = \
 	insn_template.h \
