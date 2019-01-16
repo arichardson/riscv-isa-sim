@@ -47,18 +47,12 @@ void cheri_t::cheriMem_setTag(reg_t addr) {
 
   paddr -= DRAM_BASE;
   paddr >>= (int) log2(sizeof(cheri_reg_t));
-  /* Bit location of the 64-bit work */
-  uint32_t wordShift = (uint32_t) log2(sizeof(uint64_t) * 8);
-  uint32_t bitLoc_in_64bit = paddr & MASK(wordShift);
-  uint32_t wordIndex = paddr >> wordShift;
 
 #if DEBUG
   printf("CHERI: Setting %lu tag bit\n", paddr);
-  printf("CHERI: Word %u, bit %u\n", wordIndex, bitLoc_in_64bit);
 #endif
 
-  CHERI_STATE.tag_bits[wordIndex] |= BIT(bitLoc_in_64bit);
-
+  mem_tags.setTag(paddr, true);
 }
 
 bool cheri_t::cheriMem_getTag(reg_t addr) {
@@ -73,15 +67,12 @@ bool cheri_t::cheriMem_getTag(reg_t addr) {
 
   /* Bit location of the 64-bit work */
   uint32_t wordShift = (uint32_t) log2(sizeof(uint64_t) * 8);
-  uint32_t bitLoc_in_64bit = paddr & MASK(wordShift);
-  uint32_t wordIndex = paddr >> wordShift;
 
 #if DEBUG
   printf("CHERI: Getting %lu tag bit\n", paddr);
-  printf("CHERI: Word %u, bit %u\n", wordIndex, bitLoc_in_64bit);
 #endif
 
-  return !!(CHERI_STATE.tag_bits[wordIndex] & BIT(bitLoc_in_64bit));
+  return mem_tags.getTag(paddr);
 }
 
 void cheri_t::cheriMem_clearTag(reg_t addr) {
@@ -89,16 +80,12 @@ void cheri_t::cheriMem_clearTag(reg_t addr) {
 
   paddr -= DRAM_BASE;
   paddr >>= (int) log2(sizeof(cheri_reg_t) * 8);
-  uint32_t wordShift = (uint32_t) log2(sizeof(uint64_t) * 8);
-  /* Bit location of the 64-bit work */
-  uint32_t bitLoc_in_64bit = paddr & MASK(wordShift);
-  uint32_t wordIndex = paddr >> wordShift;
+
 #if DEBUG
   printf("CHERI: Clearing %lu tag bit\n", paddr);
-  printf("CHERI: Word %d, bit %d\n", wordIndex, bitLoc_in_64bit);
 #endif
 
-  CHERI_STATE.tag_bits[wordIndex] &= ~BIT(bitLoc_in_64bit);
+  mem_tags.setTag(paddr, false);
 }
 
 mmu_t* cheri_t::get_mmu(void) {
@@ -143,24 +130,6 @@ std::vector<insn_desc_t> cheri_t::get_instructions() {
 std::vector<disasm_insn_t*> cheri_t::get_disasms() {
   std::vector<disasm_insn_t*> insns;
   return insns;
-}
-
-void cheri_t::create_tagged_memory(size_t memsz) {
-  /* Rounded down, because last chuck of memory can't fit a cap */
-  uint64_t needed_bits = (memsz / sizeof(cheri_reg_t));
-#if DEBUG
-  printf("CHERI: Creating tagged memory for %u bytes of phys memory\n", memsz);
-  printf("CHERI: Cap-size is %u-bits\n", sizeof(cheri_reg_t) * 8);
-  printf("CHERI: Allocating %u bits (%u KiB) (%d uint64_t words) of memory\n", needed_bits, (needed_bits / 8) / 1024 / 1024, (needed_bits / 8) / sizeof(uint64_t));
-#endif
-
-  /* Allocate needed bits in bytes, and zero it */
-  state.tag_bits = (uint64_t *) calloc((needed_bits / 8) / sizeof(uint64_t), sizeof(uint64_t));
-
-  if (state.tag_bits == NULL) {
-    printf("CHERI: Failed to allocate memory for tagged bits\n");
-    exit(-1);
-  }
 }
 
 /* Override extension functions */

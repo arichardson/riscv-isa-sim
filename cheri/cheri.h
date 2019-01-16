@@ -39,6 +39,7 @@
 #include "extension.h"
 #include "cheri_trap.h"
 #include "cheri_compressed_cap.h"
+#include "tags.h"
 
 #define DEBUG 0
 #define BIT(x) (1ull << (x))
@@ -103,8 +104,6 @@ struct cheri_state {
 
   /* CHERI cause registers */
   reg_t capcause[PRV_M + 1];
-
-  uint64_t *tag_bits;
 };
 
 typedef struct cheri_state cheri_state_t;
@@ -113,12 +112,9 @@ class cheri_t : public extension_t {
  public:
 
   cheri_t() {
-    /* FIXME: For now assume DRAM size is 2GiB, the default for Spike */
-    create_tagged_memory(BIT(31));
   }
 
   ~cheri_t() {
-    free(state.tag_bits);
   }
 
   /* Override extension functions */
@@ -153,6 +149,8 @@ class cheri_t : public extension_t {
   cheri_state_t state;
 
  private:
+  /* FIXME: For now assume DRAM size is 2GiB, the default for Spike */
+  tags_t<bool, (BIT(31) / sizeof(cheri_reg_t))> mem_tags;
   uint32_t clen = 0;
   reg_t capcause = 0;
   std::vector<insn_desc_t> instructions;
