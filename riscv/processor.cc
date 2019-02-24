@@ -132,6 +132,18 @@ void state_t::reset(reg_t max_isa)
 
   pmpcfg[0] = PMP_R | PMP_W | PMP_X | PMP_NAPOT;
   pmpaddr[0] = ~reg_t(0);
+
+#ifdef CHERI_MERGED_RF
+  cheri_reg_t null_reg = {0, (uint64_t) -1, 0, 0, 0, 0, 0, 0, 0};
+
+  XPR.write_c0(null_reg);
+
+  /* Nullify all CHERI GPRs */
+  for (int i = 0; i < NXPR; i++) {
+    XPR.write(i, null_reg);
+  }
+
+#endif /* CHERI_MERGED_RF */
 }
 
 void processor_t::set_debug(bool value)

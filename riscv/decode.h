@@ -156,6 +156,14 @@ public:
     if (i != 0)
       data[i] = value;
   }
+  /* Special function, should only be used at reset and not
+   * by the ISA
+   */
+  void write_c0(cheri_reg_t value)
+  {
+    data[0] = value;
+  }
+
   const cheri_reg_t& operator [] (size_t i) const
   {
     return data[i];
