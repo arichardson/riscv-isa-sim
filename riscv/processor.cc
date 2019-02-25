@@ -694,8 +694,8 @@ reg_t processor_t::get_csr(int which)
     case CSR_MSCRATCH: return state.mscratch;
     case CSR_MCAUSE: return state.mcause;
 #ifdef ENABLE_CHERI
-    case CSR_SCAUSEC: return state.scausec;
-    case CSR_MCAUSEC: return state.mcausec;
+    case CSR_SCCSR: return state.scausec;
+    case CSR_MCCSR: return state.mcausec;
 #endif /* ENABLE_CHERI */
     case CSR_MTVAL: return state.mtval;
     case CSR_MISA: return state.misa;
