@@ -81,7 +81,7 @@ public:
       if (proc->rvfi_dii) {
         proc->rvfi_dii_output.rvfi_dii_mem_addr = addr;
         proc->rvfi_dii_output.rvfi_dii_mem_wdata = data;
-        proc->rvfi_dii_output.rvfi_dii_mem_wmask = size;
+        proc->rvfi_dii_output.rvfi_dii_mem_wmask = (1 << size) - 1;
       }
     }
 #else
@@ -126,7 +126,7 @@ public:
         if (proc->rvfi_dii) { \
           proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
           proc->rvfi_dii_output.rvfi_dii_mem_rdata = data; \
-          proc->rvfi_dii_output.rvfi_dii_mem_rmask = sizeof(type##_t); \
+          proc->rvfi_dii_output.rvfi_dii_mem_rmask = (1 << sizeof(type##_t)) - 1; \
         } \
       } \
       return data; \
@@ -160,7 +160,7 @@ public:
         if (proc->rvfi_dii) { \
           proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
           proc->rvfi_dii_output.rvfi_dii_mem_rdata = data; \
-          proc->rvfi_dii_output.rvfi_dii_mem_rmask = sizeof(type##_t); \
+          proc->rvfi_dii_output.rvfi_dii_mem_rmask = (1 << sizeof(type##_t)) - 1; \
         } \
       } \
       return data; \
@@ -236,7 +236,7 @@ public:
         if (proc->rvfi_dii) { \
           proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
           proc->rvfi_dii_output.rvfi_dii_mem_wdata = val; \
-          proc->rvfi_dii_output.rvfi_dii_mem_wmask = sizeof(val); \
+          proc->rvfi_dii_output.rvfi_dii_mem_wmask = (1 << sizeof(val)) - 1; \
         } \
       } \
     }
@@ -262,7 +262,7 @@ public:
         if (proc->rvfi_dii) { \
           proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
           proc->rvfi_dii_output.rvfi_dii_mem_wdata = val; \
-          proc->rvfi_dii_output.rvfi_dii_mem_wmask = sizeof(val); \
+          proc->rvfi_dii_output.rvfi_dii_mem_wmask = (1 << sizeof(val)) - 1; \
         } \
       } \
     }
