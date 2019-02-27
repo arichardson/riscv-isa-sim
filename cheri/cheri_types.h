@@ -36,7 +36,7 @@
 
 #include <config.h>
 
-/* 256-bit Caps register formant *
+/* 256-bit Caps register format *
  * -------------------------------------------------------------------------
  * | length | base | offset | uperms | perms | S | reserved | otype | Tag  |
  * -------------------------------------------------------------------------
@@ -56,6 +56,19 @@ struct cheri_reg_t {
   uint32_t otype    : 24;
   uint32_t reserved : 7;
   uint32_t tag      : 1;
+};
+
+const cheri_reg_t null_cap = {0};
+const cheri_reg_t almighty_cap = {
+  .base     = 0,
+  .length   = 0xffffffffffffffff,
+  .offset   = 0,
+  .uperms   = 0xfffff,
+  .perms    = 0x7ff,
+  .sealed   = 0,
+  .otype    = 0,
+  .reserved = 0,
+  .tag      = 1
 };
 
 #ifdef ENABLE_CHERI128
