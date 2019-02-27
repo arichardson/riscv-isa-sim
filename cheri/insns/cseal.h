@@ -1,7 +1,19 @@
 // See LICENSE_CHERI for license details.
 
-cheri_reg_t temp = CS1;
-temp.sealed = 1;
-temp.otype = CS2.base + CS2.offset;
-WRITE_CD(temp);
-
+if (!CS1.tag) CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
+else if (!CS2.tag) CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs2());
+else if (CS1.sealed) CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
+else if (CS2.sealed) CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs2());
+/* FIXME */
+//else if (!CS2.perms.permitSeal) CHERI->raise_trap(CAUSE_CHERI_PERMIT_SEAL_FAULT, insn.cs2());
+else if (CS2.base + CS2.offset >= CS2.base + CS2.length) CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs2());
+/* FIXME */
+//else if (CS2.base + CS2.offset > otypeMAX) CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs2());
+/* FIXME */
+// else if (!new_cap.exact) CHERI->raise_trap(CAUSE_CHERI_BOUNDS_FAULT, insn.cs1());
+else {
+  cheri_reg_t temp = CS1;
+  temp.sealed = 1;
+  temp.otype = CS2.base + CS2.offset;
+  WRITE_CD(temp);
+}
