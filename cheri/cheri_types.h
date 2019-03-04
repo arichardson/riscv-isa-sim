@@ -58,18 +58,29 @@ struct cheri_reg_t {
   uint32_t tag      : 1;
 };
 
-const cheri_reg_t null_cap = {0};
-const cheri_reg_t almighty_cap = {
-  .base     = 0,
-  .length   = 0xffffffffffffffff,
-  .offset   = 0,
-  .uperms   = 0xfffff,
-  .perms    = 0x7ff,
-  .sealed   = 0,
-  .otype    = 0,
-  .reserved = 0,
-  .tag      = 1
-};
+#define CHERI_NULL_CAP (cheri_reg_t) { \
+  .base     = 0,                       \
+  .length   = 0xffffffffffffffff,      \
+  .offset   = 0,                       \
+  .uperms   = 0,                       \
+  .perms    = 0,                       \
+  .sealed   = 0,                       \
+  .otype    = 0,                       \
+  .reserved = 0,                       \
+  .tag      = 0                        \
+}
+
+#define CHERI_ALMIGHTY_CAP (cheri_reg_t) { \
+  .base     = 0,                           \
+  .length   = 0xffffffffffffffff,          \
+  .offset   = 0,                           \
+  .uperms   = 0xfffff,                     \
+  .perms    = 0x7ff,                       \
+  .sealed   = 0,                           \
+  .otype    = 0,                           \
+  .reserved = 0,                           \
+  .tag      = 1                            \
+}
 
 #ifdef ENABLE_CHERI128
 typedef cheri_reg_t cap_register_t;
