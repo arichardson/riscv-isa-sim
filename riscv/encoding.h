@@ -875,9 +875,9 @@
 #define MASK_SDCAP  0xfff0707f
 #define MATCH_SQCAP 0x1c0005b
 #define MASK_SQCAP  0xfff0707f
-#define MATCH_CLC 0xb
+#define MATCH_CLC 0x200f
 #define MASK_CLC  0x707f
-#define MATCH_CSC 0x100b
+#define MATCH_CSC 0x4023
 #define MASK_CSC  0x707f
 #define MATCH_CTAG 0x4200005b
 #define MASK_CTAG  0xfff07fff
