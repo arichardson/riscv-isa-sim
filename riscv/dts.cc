@@ -70,7 +70,16 @@ std::string make_dts(size_t insns_per_rtc_tick, size_t cpu_hz,
          "  htif {\n"
          "    compatible = \"ucb,htif0\";\n"
          "  };\n"
+        " chosen {\n"
+         "  #address-cells = <2>;\n"
+         "  #size-cells = <2>;\n"
+        "        linux,initrd-end = <0x0000000000000000 0>;\n"
+        "        linux,initrd-start = <0x0000000088000000 0>;\n"
+        "        bootargs = \"rdinit=/sbin/init\";\n"
+        "        stdout-path = \"\";\n"
+        "};\n"
          "};\n";
+
   return s.str();
 }
 
