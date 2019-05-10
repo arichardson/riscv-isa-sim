@@ -931,7 +931,7 @@
 #define CSR_STVAL 0x143
 #define CSR_SIP 0x144
 #define CSR_SATP 0x180
-#define CSR_SCCSR 0x5c0
+#define CSR_SCCSR 0x9c0
 #define CSR_MSTATUS 0x300
 #define CSR_MISA 0x301
 #define CSR_MEDELEG 0x302
