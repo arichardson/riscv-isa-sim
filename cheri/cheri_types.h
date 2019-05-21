@@ -49,7 +49,8 @@ struct cheri_reg_t {
   uint64_t length;
   uint64_t offset;
 
-  uint32_t uperms : 20;
+  uint32_t flags  : 1;
+  uint32_t uperms : 19;
   uint32_t perms  : 11;
   uint32_t sealed : 1;
 
@@ -62,6 +63,7 @@ struct cheri_reg_t {
   .base     = 0,                       \
   .length   = 0xffffffffffffffff,      \
   .offset   = 0,                       \
+  .flags    = 0,                       \
   .uperms   = 0,                       \
   .perms    = 0,                       \
   .sealed   = 0,                       \
@@ -73,6 +75,7 @@ struct cheri_reg_t {
 #define CHERI_ALMIGHTY_CAP (cheri_reg_t) { \
   .base     = 0,                           \
   .length   = 0xffffffffffffffff,          \
+  .flags    = 0,                           \
   .offset   = 0,                           \
   .uperms   = 0xfffff,                     \
   .perms    = 0x7ff,                       \

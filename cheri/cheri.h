@@ -138,6 +138,11 @@ class cheri_t : public extension_t {
   void set_cause(reg_t c) {
     capcause = c;
   };
+
+  bool get_mode() {
+    return !!PCC.flags;
+  };
+
   void raise_trap(reg_t trap_code, reg_t trap_reg) {
     set_cause((trap_code << 8) | trap_reg);
     throw trap_cheri_trap();
