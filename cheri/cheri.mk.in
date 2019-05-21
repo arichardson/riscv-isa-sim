@@ -47,8 +47,6 @@ cheri_insn_list = \
 	cfromptr \
 	csub \
 	cmove \
-	cmovz \
-	cmovn \
 	cjr \
 	cjalr \
 	ccall \
@@ -87,6 +85,8 @@ cheri_insn_list = \
 	sc \
 	clc \
 	csc \
+	cmovz \
+	cmovn \
 
 cheri_gen_srcs = \
 	$(addsuffix .cc,$(cheri_insn_list))
