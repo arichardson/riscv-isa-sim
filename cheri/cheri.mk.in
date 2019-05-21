@@ -21,6 +21,7 @@ cheri_srcs = \
 
 cheri_insn_list = \
 	csetoffset \
+	csetflags \
 	cgetperm \
 	cgettype \
 	cgetaddr \
@@ -29,6 +30,7 @@ cheri_insn_list = \
 	cgettag \
 	cgetsealed \
 	cgetoffset \
+	cgetflags \
 	cseal \
 	cunseal \
 	candperm \
