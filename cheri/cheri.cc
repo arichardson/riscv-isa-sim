@@ -98,9 +98,9 @@ static inline long unsigned int poweroff(processor_t* p, insn_t y, long unsigned
 }
 
 #define CHERI_REGISTER_INSN(cheri, name, match, mask) \
-  extern reg_t rv32_##name(processor_t*, insn_t, reg_t); \
-  extern reg_t rv64_##name(processor_t*, insn_t, reg_t); \
-  cheri->register_insn((insn_desc_t){match, mask, rv32_##name, rv64_##name});
+  extern reg_t rv32cheri_##name(processor_t*, insn_t, reg_t); \
+  extern reg_t rv64cheri_##name(processor_t*, insn_t, reg_t); \
+  cheri->register_insn((insn_desc_t){match, mask, rv32cheri_##name, rv64cheri_##name});
 
 void cheri_t::register_insn(insn_desc_t desc) {
   instructions.push_back(desc);
