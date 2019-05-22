@@ -78,8 +78,8 @@
 #define WRITE_CD(val) CHERI_STATE.reg_file[insn.cd()] =  val
 #endif /* CHERI_MERGED_RF */
 
-#define CHERI_USER_PERM_BITS 20
-#define CHERI_PERM_BITS      11
+#define CHERI_USER_PERM_BITS 17
+#define CHERI_PERM_BITS      15
 
 #ifdef ENABLE_CHERI128
 #define CHERI_CAPSIZE_BYTES 16

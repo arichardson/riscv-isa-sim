@@ -50,8 +50,8 @@ struct cheri_reg_t {
   uint64_t offset;
 
   uint32_t flags  : 1;
-  uint32_t uperms : 19;
-  uint32_t perms  : 11;
+  uint32_t uperms : 17;
+  uint32_t perms  : 15;
   uint32_t sealed : 1;
 
   uint32_t otype    : 24;
@@ -67,7 +67,7 @@ struct cheri_reg_t {
   .uperms   = 0,                       \
   .perms    = 0,                       \
   .sealed   = 0,                       \
-  .otype    = 0,                       \
+  .otype    = -1u,                     \
   .reserved = 0,                       \
   .tag      = 0                        \
 }
@@ -77,10 +77,10 @@ struct cheri_reg_t {
   .length   = 0xffffffffffffffff,          \
   .flags    = 0,                           \
   .offset   = 0,                           \
-  .uperms   = 0xfffff,                     \
-  .perms    = 0x7ff,                       \
+  .uperms   = 0xfu,                        \
+  .perms    = 0xfffu,                      \
   .sealed   = 0,                           \
-  .otype    = 0,                           \
+  .otype    = -1u,                         \
   .reserved = 0,                           \
   .tag      = 1                            \
 }

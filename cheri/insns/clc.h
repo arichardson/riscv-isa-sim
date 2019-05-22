@@ -14,7 +14,8 @@ if (!CHERI->cheriMem_getTag(paddr)) {
   CAPCAUSE = (CAUSE_CHERI_TAG_FAULT << 8) | insn.cs2();
 
   throw trap_cheri_trap();
+} else {
+  cd.tag = 1;
+  CD = cd;
 }
 
-cd.tag = 1;
-CD = cd;
