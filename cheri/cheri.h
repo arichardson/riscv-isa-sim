@@ -101,9 +101,6 @@ struct cheri_state {
   cheri_reg_t reg_file[NUM_CHERI_REGS];
 
   cheri_reg_t csrs_reg_file[NUM_CHERI_CSR_REGS];
-
-  /* CHERI cause registers */
-  reg_t capcause[PRV_M + 1];
 };
 
 typedef struct cheri_state cheri_state_t;
@@ -132,11 +129,11 @@ class cheri_t : public extension_t {
   uint32_t get_clen() {
     return clen;
   };
-  reg_t get_cause() {
-    return capcause;
+  reg_t get_ccsr() {
+    return ccsr;
   };
-  void set_cause(reg_t c) {
-    capcause = c;
+  void set_ccsr(reg_t c) {
+    ccsr = c;
   };
 
   bool get_mode() {
@@ -144,7 +141,7 @@ class cheri_t : public extension_t {
   };
 
   void raise_trap(reg_t trap_code, reg_t trap_reg) {
-    set_cause((trap_code << 8) | trap_reg);
+    set_ccsr((trap_code << 8) | trap_reg);
     throw trap_cheri_trap();
   };
 
@@ -157,7 +154,7 @@ class cheri_t : public extension_t {
   /* FIXME: For now assume DRAM size is 2GiB, the default for Spike */
   tags_t<bool, (BIT(31) / sizeof(cheri_reg_t))> mem_tags;
   uint32_t clen = 0;
-  reg_t capcause = 0;
+  reg_t ccsr = 0;
   std::vector<insn_desc_t> instructions;
 };
 

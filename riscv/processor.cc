@@ -310,7 +310,7 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     state.scause = t.cause();
 #ifdef ENABLE_CHERI
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
-    state.scausec = cheri->get_cause();
+    state.sccsr = cheri->get_ccsr();
     cheri->state.csrs_reg_file[CHERI_CSR_SEPCC] = cheri->state.csrs_reg_file[CHERI_CSR_PCC];
     cheri->state.csrs_reg_file[CHERI_CSR_PCC] = cheri->state.csrs_reg_file[CHERI_CSR_STCC];
 #endif /* ENABLE_CHERI */
@@ -330,7 +330,7 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     state.mcause = t.cause();
 #ifdef ENABLE_CHERI
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
-    state.mcausec = cheri->get_cause();
+    state.mccsr = cheri->get_ccsr();
     cheri->state.csrs_reg_file[CHERI_CSR_MEPCC] = cheri->state.csrs_reg_file[CHERI_CSR_PCC];
     cheri->state.csrs_reg_file[CHERI_CSR_PCC] = cheri->state.csrs_reg_file[CHERI_CSR_MTCC];
 #endif /* ENABLE_CHERI */
@@ -700,8 +700,8 @@ reg_t processor_t::get_csr(int which)
     case CSR_MSCRATCH: return state.mscratch;
     case CSR_MCAUSE: return state.mcause;
 #ifdef ENABLE_CHERI
-    case CSR_SCCSR: return state.scausec;
-    case CSR_MCCSR: return state.mcausec;
+    case CSR_SCCSR: return state.sccsr;
+    case CSR_MCCSR: return state.mccsr;
 #endif /* ENABLE_CHERI */
     case CSR_MTVAL: return state.mtval;
     case CSR_MISA: return state.misa;

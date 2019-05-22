@@ -165,8 +165,8 @@ struct state_t
 #endif /* RISCV_ENABLE_HPM */
 
 #ifdef ENABLE_CHERI
-  reg_t mcausec;
-  reg_t scausec;
+  reg_t mccsr;
+  reg_t sccsr;
 #endif /* ENABLE_CHERI */
 };
 
