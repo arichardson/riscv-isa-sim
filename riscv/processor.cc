@@ -134,13 +134,19 @@ void state_t::reset(reg_t max_isa)
   pmpaddr[0] = ~reg_t(0);
 
 #ifdef CHERI_MERGED_RF
-  cheri_reg_t null_reg = {0, (uint64_t) -1, 0, 0, 0, 0, 0, 0, 0};
+  cheri_reg_t null_cap = {0, (uint64_t) -1ul, 0, 0, 0, 0, 0, -1u, 0, 0};
+#ifdef RISCV_ENABLE_RVFI_DII
+  /* Init all registers to almighty to make testing easier */
+  cheri_reg_t init_reg = {0, (uint64_t) -1ul, 0, 0, 0xfu, 0xfffu, 0, -1u, 0, 1u};
+#else
+  cheri_reg_t init_reg = null_cap;
+#endif
 
-  XPR.write_c0(null_reg);
+  XPR.write_c0(null_cap);
 
   /* Nullify all CHERI GPRs */
   for (int i = 0; i < NXPR; i++) {
-    XPR.write(i, null_reg);
+    XPR.write(i, init_reg);
   }
 
 #endif /* CHERI_MERGED_RF */
