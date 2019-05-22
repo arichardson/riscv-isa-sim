@@ -279,6 +279,15 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     if (t.has_tval())
       fprintf(stderr, "core %3d:           tval 0x%016" PRIx64 "\n", id,
           t.get_tval());
+
+#ifdef ENABLE_CHERI
+    if (t.cause() == CAUSE_CHERI_TRAP) {
+       cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
+       fprintf(stderr, "CHERI-DEBUG: PRV %lu = CCSR = 0x%lx\n", state.prv,
+       cheri->get_ccsr());
+    }
+#endif
+
   }
 
   if (state.dcsr.cause) {
