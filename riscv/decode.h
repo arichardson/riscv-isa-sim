@@ -176,7 +176,7 @@ private:
 #define STATE (*p->get_state())
 
 #ifdef CHERI_MERGED_RF
-#define READ_REG(reg) STATE.XPR[reg].offset
+#define READ_REG(reg) (STATE.XPR[reg].base + STATE.XPR[reg].offset)
 #else
 #define READ_REG(reg) STATE.XPR[reg]
 #endif
