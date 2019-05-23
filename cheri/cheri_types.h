@@ -59,6 +59,8 @@ struct cheri_reg_t {
   uint32_t tag      : 1;
 };
 
+#define OTYPE_UNSEALED 0xffffffu
+
 #define CHERI_NULL_CAP (cheri_reg_t) { \
   .base     = 0,                       \
   .length   = 0xffffffffffffffff,      \
@@ -67,7 +69,7 @@ struct cheri_reg_t {
   .uperms   = 0,                       \
   .perms    = 0,                       \
   .sealed   = 0,                       \
-  .otype    = -1u,                     \
+  .otype    = OTYPE_UNSEALED,          \
   .reserved = 0,                       \
   .tag      = 0                        \
 }
@@ -80,7 +82,7 @@ struct cheri_reg_t {
   .uperms   = 0xfu,                        \
   .perms    = 0xfffu,                      \
   .sealed   = 0,                           \
-  .otype    = -1u,                         \
+  .otype    = OTYPE_UNSEALED,              \
   .reserved = 0,                           \
   .tag      = 1                            \
 }

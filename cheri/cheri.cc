@@ -145,9 +145,9 @@ void cheri_t::reset() {
 
   /* Initialize pcc and ddc */
   /* FIXME: Need to decide what permissions to be set for PCC (i.e. no store) */
-  state.csrs_reg_file[CHERI_CSR_PCC] = {0, -1ul, 0, 0, 0xfu, 0xfffu, 0, -1u, 0, 1};
+  state.csrs_reg_file[CHERI_CSR_PCC] = {0, -1ul, 0, 0, 0xfu, 0xfffu, 0, OTYPE_UNSEALED, 0, 1};
   /* FIXME: Need to decide what permissions to be set for DDC (i.e. no execute) */
-  state.csrs_reg_file[CHERI_CSR_DDC] = {0, -1ul, 0, 0, 0xfu, 0xfffu, 0, -1u, 0, 1};
+  state.csrs_reg_file[CHERI_CSR_DDC] = {0, -1ul, 0, 0, 0xfu, 0xfffu, 0, OTYPE_UNSEALED, 0, 1};
 
   /* Set cap size to 2*xlen; i.e., 128 cap size for RV64 and 64 for RV32 */
 #ifdef ENABLE_CHERI128
