@@ -14,10 +14,7 @@ if (cs.tag) {
   printf("CHERI: Trying to store untagged cap register\n");
 #endif
 
-  /* set capcause */
-  CAPCAUSE = (CAUSE_CHERI_TAG_FAULT << 8) | insn.cs2();
-
-  throw trap_cheri_trap();
+  CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs2());
 }
 
 CHERI->get_mmu()->store_cheri_reg(paddr, cs);

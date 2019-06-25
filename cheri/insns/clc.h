@@ -10,12 +10,10 @@ if (!CHERI->cheriMem_getTag(paddr)) {
 #if DEBUG
   printf("CHERI: Memory tag is not set\n");
 #endif
-  /* set capcause */
-  CAPCAUSE = (CAUSE_CHERI_TAG_FAULT << 8) | insn.cs2();
 
-  throw trap_cheri_trap();
+  CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs2());
 } else {
   cd.tag = 1;
-  CD = cd;
+  WRITE_CD(cd);
 }
 
