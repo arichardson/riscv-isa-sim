@@ -31,6 +31,10 @@ if (!cb_val.tag) {
 else {
   cheri_reg_t temp = PCC;
 
+  PCC = cb_val;
+  /* offset of PCC will be in pc */
+  PCC.offset = 0;
+
   // Link cap
   temp.offset = pc + 4;
   WRITE_CD(temp);
