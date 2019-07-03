@@ -1,5 +1,7 @@
 // See LICENSE_CHERI for license details.
 
+// FIXME: This instruction implementation is not complete
+
 reg_t addr = READ_REG(insn.scrs()) + insn.s_imm();
 cheri_reg_t cs = CHERI_STATE.reg_file[insn.cs2()];
 
@@ -14,7 +16,7 @@ if (cs.tag) {
   printf("CHERI: Trying to store untagged cap register\n");
 #endif
 
-  CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs2());
+  //CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs2());
 }
 
 CHERI->get_mmu()->store_cheri_reg(paddr, cs);
