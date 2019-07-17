@@ -11,6 +11,9 @@ else if (CS1.otype != OTYPE_UNSEALED) {
 else if (cursor < CS1.base) {
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
 }
+else if (cursor + RS2 < cursor) {//Check for addition overflow
+  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
+}
 else if (cursor + RS2 > CS1.base + CS1.length) {
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
 }
