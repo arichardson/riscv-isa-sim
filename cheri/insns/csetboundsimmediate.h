@@ -3,11 +3,13 @@
 if (!CS1.tag) {
   CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
 }
-else if (CS1.otype != OTYPE_UNSEALED) {
-  CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT,
-  insn.cs1());
+else if (CS1.sealed) {
+  CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
 }
 else if (CS1.base + CS1.offset < CS1.base) {
+  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
+}
+else if (CS1.base + CS1.offset + (insn.u_imm()) < CS1.base + CS1.offset) { //check if the base+offset+immediate overflows or not
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
 }
 else if (CS1.base + CS1.offset + (insn.u_imm()) > CS1.base + CS1.length) {

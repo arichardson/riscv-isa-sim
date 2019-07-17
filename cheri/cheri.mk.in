@@ -20,6 +20,7 @@ cheri_srcs = \
 	$(cheri_gen_srcs)\
 
 cheri_insn_list = \
+  csetaddr \
 	csetoffset \
 	csetflags \
 	cgetperm \
