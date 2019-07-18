@@ -182,7 +182,13 @@ private:
     cheri_reg_t wdata = (value); /* value may have side effects */ \
     STATE.XPR.write(reg, wdata); \
   })
-#define WRITE_CD_MERGED(value) WRITE_REG_MERGED(insn.rd(), value)
+#define WRITE_CD_MERGED(value) ({ \
+  WRITE_REG_MERGED(insn.rd(), value); \
+  if (p->rvfi_dii && (insn.rd() != 0)) { \
+    p->rvfi_dii_output.rvfi_dii_rd_wdata = value.base + value.offset; \
+    p->rvfi_dii_output.rvfi_dii_rd_addr = insn.rd(); \
+  } \
+})
 #else
 #define READ_REG(reg) STATE.XPR[reg]
 #endif
