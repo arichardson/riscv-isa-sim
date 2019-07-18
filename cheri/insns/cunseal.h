@@ -6,7 +6,7 @@ else if (!CS1.sealed) CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
 else if (CS2.sealed) CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs2());
 else if (CS2.base + CS2.offset != CS1.otype) CHERI->raise_trap(CAUSE_CHERI_TYPE_FAULT, insn.cs2());
 /* FIXME */
-//else if (!CS2.perms.permitUnseal) CHERI->raise_trap(CAUSE_CHERI_PERMIT_UNSEAL_FAULT, insn.cs2());
+else if (!(CS2.perms & BIT(CHERI_PERMIT_UNSEAL))) CHERI->raise_trap(CAUSE_CHERI_PERMIT_UNSEAL_FAULT, insn.cs2());
 else if (CS2.base + CS2.offset >= CS2.base + CS2.length) CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs2());
 else {
   cheri_reg_t temp = CS1;
