@@ -31,6 +31,7 @@
  * SUCH DAMAGE.
  */
 
+
 if (!DDC.tag) {
 #if DEBUG
   printf("CHERI: Trying to store via untagged DDC register\n");
@@ -49,7 +50,8 @@ if (!DDC.tag) {
   CHERI->raise_trap(CAUSE_CHERI_PERMIT_STORE_FAULT, (1 << 5) | CHERI_CSR_DDC);
 }
 
-reg_t addr = DDC.base + RS1;
+reg_t addr = DDC.base + DDC.offset + RS1;
+reg_t paddr = CHERI->get_mmu()->translate(addr, 1, STORE);
 
 if (addr + 8 > DDC.base + DDC.length) {
 #if DEBUG
@@ -62,9 +64,14 @@ if (addr + 8 > DDC.base + DDC.length) {
 #endif
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, (1 << 5) | CHERI_CSR_DDC);
 } else {
+
 #if DEBUG
-  printf("CHERI: storing mem \n");
+  printf("CHERI: storing cap \n");
 #endif
-  CHERI->cheriMem_clearTag(addr);
-  CHERI->get_mmu()->store_uint64(addr, READ_REG(insn.rd()));
+  CHERI->get_mmu()->store_cheri_reg(paddr, CD);
+  if (CD.tag) {
+    CHERI->cheriMem_setTag(addr);
+  } else {
+    CHERI->cheriMem_clearTag(addr);
+  }
 }

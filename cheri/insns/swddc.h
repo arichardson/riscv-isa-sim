@@ -66,5 +66,5 @@ if (addr + 4 > DDC.base + DDC.length) {
   printf("CHERI: storing mem \n");
 #endif
   CHERI->cheriMem_clearTag(addr);
-  CHERI->get_mmu()->store_uint8(addr, READ_REG(insn.rd()));
+  CHERI->get_mmu()->store_uint32(addr, READ_REG(insn.rd()));
 }

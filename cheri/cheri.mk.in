@@ -79,6 +79,7 @@ cheri_insn_list = \
 	shcap \
 	swcap \
 	sdcap \
+  sqddc \
 	sqcap \
 	ctag \
 	creadhpmcounter \

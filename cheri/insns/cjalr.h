@@ -36,10 +36,9 @@ else {
   PCC.offset = 0;
 
   // Link cap
-  temp.offset = pc + 4;
-  //WRITE_CD(temp);
+  temp.offset = pc+4;
+  WRITE_CD(temp);
 
-  WRITE_CD_MERGED(temp);
 
 #if DEBUG
   printf("CHERI: cjalr- - linkreg = %p jumping to %p\n", temp.offset, PCC.base

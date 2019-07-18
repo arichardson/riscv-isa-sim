@@ -18,7 +18,7 @@ else if (CS1.base + CS1.offset + (insn.u_imm()) > CS1.base + CS1.length) {
 else {
   cheri_reg_t temp = CS1;
   temp.base = CS1.base + CS1.offset;
-  temp.length = insn.i_imm();
+  temp.length = insn.u_imm();
   temp.offset = 0;
   WRITE_CD(temp);
 }

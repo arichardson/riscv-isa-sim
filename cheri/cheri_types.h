@@ -60,6 +60,7 @@ struct cheri_reg_t {
 };
 
 #define OTYPE_UNSEALED 0xffffffu
+#define OTYPE_MAX 0x3ffff
 
 #define CHERI_NULL_CAP (cheri_reg_t) { \
   .base     = 0,                       \
