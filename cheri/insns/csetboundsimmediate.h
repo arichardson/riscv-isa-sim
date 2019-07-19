@@ -20,7 +20,7 @@ else if (CS1.base + CS1.offset + (insn.i_imm()) > CS1.base + CS1.length) {
 else {
   cheri_reg_t temp = CS1;
   temp.base = CS1.base + CS1.offset;
-  temp.length = insn.i_imm();
+  temp.length = insn.i_imm() & 0x0FFF; //remove the sign extension form i_imm
   temp.offset = 0;
   WRITE_CD(temp);
 }
