@@ -85,7 +85,7 @@
 #define CHERI_CAPSIZE_BYTES 16
 #else
 #define CHERI_CAPSIZE_BYTES 32
-#endif
+#endif /* ENABLE_CHERI */
 
 extern const char *cheri_reg_names[32];
 
