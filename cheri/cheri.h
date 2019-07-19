@@ -38,7 +38,7 @@
 
 #include "extension.h"
 #include "cheri_trap.h"
-#include "cheri_compressed_cap.h"
+#include "cheri-compressed-cap/cheri_compressed_cap.h"
 #include "tags.h"
 
 #define DEBUG 0
@@ -67,7 +67,7 @@
     p->rvfi_dii_output.rvfi_dii_rd_addr = insn.cd(); \
   } \
 })
-#else
+#else/* CHERI_MERGED_RF */
 
 #define NUM_CHERI_REGS 32
 
@@ -85,7 +85,7 @@
 #define CHERI_CAPSIZE_BYTES 16
 #else
 #define CHERI_CAPSIZE_BYTES 32
-#endif /* ENABLE_CHERI */
+#endif /* ENABLE_CHERI128 */
 
 extern const char *cheri_reg_names[32];
 
@@ -158,5 +158,7 @@ class cheri_t : public extension_t {
   std::vector<insn_desc_t> instructions;
 };
 
-#endif
-#endif
+void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source);
+
+#endif /* _RISCV_CHERI_H */
+#endif /* ENABLE_CHERI */

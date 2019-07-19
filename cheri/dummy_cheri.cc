@@ -52,4 +52,16 @@ class dummy_cheri_t : public cheri_t {
 REGISTER_EXTENSION(cheri, []() {
   return new dummy_cheri_t;
 })
-#endif
+
+void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source) {
+  destination->cr_offset = source->offset;
+  destination->cr_base = source->base;
+  destination->_cr_length = (cc128_length_t) source->length + (cc128_length_t) 1;
+  destination->cr_perms = source->perms;
+  destination->cr_uperms = source->uperms;
+  destination->cr_otype = source->otype;
+  destination->cr_tag = source->tag;
+  destination->_sbit_for_memory = source->sealed;
+}
+
+#endif /*ENABLE_CHERI*/
