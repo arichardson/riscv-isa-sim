@@ -63,6 +63,7 @@ cheri_insn_list = \
 	lwddc \
 	lwuddc \
 	ldddc \
+  lqddc \
 	lbcap \
 	lbucap \
 	lhcap \
