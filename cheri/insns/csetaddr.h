@@ -6,7 +6,7 @@ else {
   temp.base = CS1.base;
   temp.length = CS1.length;
   temp.offset = RS2 - CS1.base;
-  if(temp.offset >= CS1.length) {
+  if(temp.offset > CS1.length) {
     temp.tag = 0; 
   }
   WRITE_CD(temp);
