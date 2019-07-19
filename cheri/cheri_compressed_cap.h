@@ -383,7 +383,8 @@ static inline bool cc128_is_representable(bool sealed, uint64_t base, uint64_t l
                                           uint64_t new_offset) {
   // I change the precision going between unsealed->sealed so the fast check
   // doesn't work. Instead just compress/decompress.
-  if (sealed) {
+  fprintf(stderr, "Calling CC128_is_representable, sealed %d, base 0x%lx, length 0x%lx, offset 0x%lx, newoffset 0x%lx\n", sealed, base, length, offset, new_offset);
+//  if (sealed) {
 
     cap_register_t c;
     uint64_t pesbt;
@@ -405,49 +406,49 @@ static inline bool cc128_is_representable(bool sealed, uint64_t base, uint64_t l
       return false;
 
     return true;
-  }
-
-  uint32_t bwidth = CC_L_BWIDTH;
-  uint32_t highest_exp = (64 - bwidth + 2);
-
-  uint32_t e;
-
-  // If top is 0xffff... we assume we meant it to be 1 << 64
-  if (base + length == -1ULL) {
-    length++;
-    if (length == 0) {
-      return true; // maximum length is always representable
-    }
-  }
-
-  e = cc128_compute_e(length, bwidth);
-
-  int64_t b, r, Imid, Amid;
-  bool inRange, inLimits;
-  int64_t inc = new_offset - offset;
-
-#define MOD_MASK ((1ul << bwidth) - 1ul)
-
-  /* Check for the boundary cases. */
-
-  b = (int64_t)((base >> e) & MOD_MASK);
-  Imid = (int64_t)((inc >> e) & MOD_MASK);
-  Amid = (int64_t)(((base + offset) >> e) & MOD_MASK);
-
-  r = (((b >> (bwidth - 3)) - 1) << (bwidth - 3)) & MOD_MASK;
-
-  /* inRange, test if bits are all the same */
-  inRange = cc128_all_ones(inc, e, bwidth) || cc128_all_zeroes(inc, e, bwidth);
-
-  /* inLimits */
-  if (inc >= 0) {
-    inLimits = ((uint64_t)Imid < (((uint64_t)(r - Amid - 1l)) & MOD_MASK));
-  } else {
-    inLimits = ((uint64_t)Imid >= (((uint64_t)(r - Amid)) & MOD_MASK)) && (r != Amid);
-  }
-#undef MOD_MASK
-
-  return ((inRange && inLimits) || (e >= highest_exp));
+//  }
+//
+//  uint32_t bwidth = CC_L_BWIDTH;
+//  uint32_t highest_exp = (64 - bwidth + 2);
+//
+//  uint32_t e;
+//
+//  // If top is 0xffff... we assume we meant it to be 1 << 64
+//  if (base + length == -1ULL) {
+//    length++;
+//    if (length == 0) {
+//      return true; // maximum length is always representable
+//    }
+//  }
+//
+//  e = cc128_compute_e(length, bwidth);
+//
+//  int64_t b, r, Imid, Amid;
+//  bool inRange, inLimits;
+//  int64_t inc = new_offset - offset;
+//
+//#define MOD_MASK ((1ul << bwidth) - 1ul)
+//
+//  /* Check for the boundary cases. */
+//
+//  b = (int64_t)((base >> e) & MOD_MASK);
+//  Imid = (int64_t)((inc >> e) & MOD_MASK);
+//  Amid = (int64_t)(((base + offset) >> e) & MOD_MASK);
+//
+//  r = (((b >> (bwidth - 3)) - 1) << (bwidth - 3)) & MOD_MASK;
+//
+//  /* inRange, test if bits are all the same */
+//  inRange = cc128_all_ones(inc, e, bwidth) || cc128_all_zeroes(inc, e, bwidth);
+//
+//  /* inLimits */
+//  if (inc >= 0) {
+//    inLimits = ((uint64_t)Imid < (((uint64_t)(r - Amid - 1l)) & MOD_MASK));
+//  } else {
+//    inLimits = ((uint64_t)Imid >= (((uint64_t)(r - Amid)) & MOD_MASK)) && (r != Amid);
+//  }
+//#undef MOD_MASK
+//
+//  return ((inRange && inLimits) || (e >= highest_exp));
 }
 
 #endif /* ENABLE_CHERI128 */
