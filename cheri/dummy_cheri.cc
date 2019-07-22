@@ -64,4 +64,15 @@ void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source) {
   destination->_sbit_for_memory = source->sealed;
 }
 
+void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source) {
+  destination->offset = source->cr_offset;
+  destination->base = source->cr_base;
+  destination->length = (uint64_t) (source->_cr_length - 1);
+  destination->perms = source->cr_perms;
+  destination->uperms = source->cr_uperms;
+  destination->otype = source->cr_otype;
+  destination->tag = source->cr_tag;
+  destination->sealed = source->_sbit_for_memory;
+}
+
 #endif /*ENABLE_CHERI*/

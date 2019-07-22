@@ -160,5 +160,7 @@ class cheri_t : public extension_t {
 
 void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source);
 
+void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source);
+
 #endif /* _RISCV_CHERI_H */
 #endif /* ENABLE_CHERI */

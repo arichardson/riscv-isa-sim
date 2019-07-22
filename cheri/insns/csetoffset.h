@@ -8,6 +8,7 @@ actualLength += 1;
 if (CS1.tag && CS1.sealed) CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
 else if (!cc128_is_representable(CS1.sealed, CS1.base, actualLength, new_offset, new_offset)) {
   cheri_reg_t temp = CHERI_NULL_CAP;
+  temp.base = CS1.base;
   temp.offset = new_offset; //Set temp.address = cb_val.base + rt_val
   WRITE_CD(temp);
 }
