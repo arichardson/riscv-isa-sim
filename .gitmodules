@@ -1,3 +1,6 @@
 [submodule "fesvr"]
 	path = fesvr
 	url = https://github.com/riscv/riscv-fesvr.git
+[submodule "cheri/cheri-compressed-cap"]
+	path = cheri/cheri-compressed-cap
+	url = https://github.com/CTSRD-CHERI/cheri-compressed-cap.git

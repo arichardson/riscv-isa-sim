@@ -31,37 +31,40 @@
  * SUCH DAMAGE.
  */
 
-#include <config.h>
-#ifdef ENABLE_CHERI
-#include "cheri.h"
-#include "mmu.h"
-#include <cstring>
-#include <stdio.h>
+if (!DDC.tag) {
+#if DEBUG
+  printf("CHERI: Trying to load via untagged DDC register\n");
+#endif
 
-class dummy_cheri_t : public cheri_t {
- public:
-  const char* name() {
-    return "cheri";
-  }
-
-  dummy_cheri_t() {
-    printf("CHERI Extension is Enabled..\n");
-  }
-};
-
-REGISTER_EXTENSION(cheri, []() {
-  return new dummy_cheri_t;
-})
-
-void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source) {
-  destination->cr_offset = source->offset;
-  destination->cr_base = source->base;
-  destination->_cr_length = (cc128_length_t) source->length + (cc128_length_t) 1;
-  destination->cr_perms = source->perms;
-  destination->cr_uperms = source->uperms;
-  destination->cr_otype = source->otype;
-  destination->cr_tag = source->tag;
-  destination->_sbit_for_memory = source->sealed;
+  CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, (1 << 5) | CHERI_CSR_DDC);
+} else if (DDC.sealed) {
+#if DEBUG
+  printf("CHERI: Trying to load via a sealed DDC register\n");
+#endif
+  CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, CHERI_CSR_DDC);
+} else if ((DDC.perms & BIT(CHERI_PERMIT_LOAD)) != BIT(CHERI_PERMIT_LOAD)) {
+#if DEBUG
+  printf("CHERI: Trying to load with no DDC LOAD permissions\n");
+#endif
+  CHERI->raise_trap(CAUSE_CHERI_PERMIT_LOAD_FAULT, (1 << 5) | CHERI_CSR_DDC);
 }
 
-#endif /*ENABLE_CHERI*/
+reg_t addr = DDC.base + DDC.offset + RS1;
+reg_t paddr = CHERI->get_mmu()->translate(addr, 1, STORE);
+
+if (addr + 8 > DDC.base + DDC.length || addr + 8 < addr) {
+#if DEBUG
+  printf("CHERI: Trying to load with wrong bounds\n");
+#endif
+  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, (1 << 5) | CHERI_CSR_DDC);
+} else if (addr < DDC.base) {
+#if DEBUG
+  printf("CHERI: Trying to load with wrong bounds\n");
+#endif
+  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, (1 << 5) | CHERI_CSR_DDC);
+} else {
+#if DEBUG
+  printf("CHERI: loading cap \n");
+#endif
+  WRITE_CD(CHERI->get_mmu()->load_cheri_reg(paddr));
+}

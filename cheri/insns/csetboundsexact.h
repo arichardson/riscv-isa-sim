@@ -2,6 +2,11 @@
 
 reg_t cursor = CS1.base + CS1.offset;
 
+cheri_reg_t temp = CS1;
+temp.base = cursor;
+temp.length = RS2;
+temp.offset = 0;
+
 if (!CS1.tag) {
   CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
 }
@@ -17,12 +22,9 @@ else if (cursor + RS2 < cursor) {//Check for addition overflow
 else if (cursor + RS2 > CS1.base + CS1.length) {
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
 }
-/* FIXME */
-//else if (!new_cap.exact) CHERI->raise_trap(CAUSE_CHERI_BOUNDS_FAULT, insn.cs1());
+else if (!cc128_is_representable(CS1.sealed, temp.base, temp.length, temp.offset, temp.offset)) {
+  CHERI->raise_trap(CAUSE_CHERI_BOUNDS_FAULT, insn.cs1());
+}
 else {
-  cheri_reg_t temp = CS1;
-  temp.base = CS1.base + CS1.offset;
-  temp.length = RS2;
-  temp.offset = 0;
   WRITE_CD(temp);
 }

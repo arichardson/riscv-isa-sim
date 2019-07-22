@@ -89,8 +89,8 @@ struct cheri_reg_t {
 }
 
 #ifdef ENABLE_CHERI128
-typedef cheri_reg_t cap_register_t;
-#define  HAVE_CAP_REGISTER_T 1
+//typedef cheri_reg_t cap_register_t;
+//#define  HAVE_CAP_REGISTER_T 1
 
 /* CHERI compressed format in memory */
 struct cheri_reg_inmem_t {
@@ -102,5 +102,6 @@ struct cheri_reg_inmem_t {
 /* In memory is same as in register (except for tag) */
 typedef cheri_reg_t cheri_reg_inmem_t;
 #endif
+
 
 #endif

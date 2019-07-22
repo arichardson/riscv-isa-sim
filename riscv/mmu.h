@@ -177,8 +177,10 @@ public:
       if (auto host_addr = sim->addr_to_mem(paddr)) {
         memcpy((uint8_t*)&res, host_addr, sizeof(cheri_reg_inmem_t));
       }
-
-      decompress_128cap(res.pesbt, res.cursor, &ret_reg);
+      
+      cap_register_t converted;
+      convertCheriReg(&converted, &ret_reg);
+      decompress_128cap(res.pesbt, res.cursor, &converted);
       return ret_reg;
 #else
       cheri_reg_t res;
@@ -320,7 +322,9 @@ public:
         if (auto host_addr = sim->addr_to_mem(paddr)) {
 #ifdef ENABLE_CHERI128
 					cheri_reg_inmem_t reg_compressed;
-					reg_compressed.pesbt = compress_128cap(&val);
+          cap_register_t converted;
+          convertCheriReg(&converted, &val);
+					reg_compressed.pesbt = compress_128cap(&converted);
 					reg_compressed.cursor = val.base + val.offset;
           memcpy(host_addr, (const uint8_t*)&reg_compressed, sizeof(cheri_reg_inmem_t));
 #else
