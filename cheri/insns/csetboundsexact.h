@@ -7,6 +7,9 @@ temp.base = cursor;
 temp.length = RS2;
 temp.offset = 0;
 
+cc128_length_t actualLength = temp.length;
+actualLength += 1;
+
 if (!CS1.tag) {
   CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
 }
@@ -22,7 +25,7 @@ else if (cursor + RS2 < cursor) {//Check for addition overflow
 else if (cursor + RS2 > CS1.base + CS1.length) {
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
 }
-else if (!cc128_is_representable(CS1.sealed, temp.base, temp.length, temp.offset, temp.offset)) {
+else if (!cc128_is_representable(CS1.sealed, temp.base, actualLength, temp.offset, temp.offset)) {
   CHERI->raise_trap(CAUSE_CHERI_BOUNDS_FAULT, insn.cs1());
 }
 else {
