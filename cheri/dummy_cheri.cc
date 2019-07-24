@@ -56,12 +56,23 @@ REGISTER_EXTENSION(cheri, []() {
 void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source) {
   destination->cr_offset = source->offset;
   destination->cr_base = source->base;
-  destination->_cr_length = (cc128_length_t) source->length + (cc128_length_t) 1;
+  destination->_cr_length = ((cc128_length_t) source->length) + ((cc128_length_t) 1);
   destination->cr_perms = source->perms;
   destination->cr_uperms = source->uperms;
   destination->cr_otype = source->otype;
   destination->cr_tag = source->tag;
   destination->_sbit_for_memory = source->sealed;
+}
+
+void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source) {
+  destination->offset = source->cr_offset;
+  destination->base = source->cr_base;
+  destination->length = (uint64_t) (source->_cr_length - 1);
+  destination->perms = source->cr_perms;
+  destination->uperms = source->cr_uperms;
+  destination->otype = source->cr_otype;
+  destination->tag = source->cr_tag;
+  destination->sealed = source->_sbit_for_memory;
 }
 
 #endif /*ENABLE_CHERI*/

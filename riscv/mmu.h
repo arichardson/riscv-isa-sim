@@ -177,10 +177,10 @@ public:
       if (auto host_addr = sim->addr_to_mem(paddr)) {
         memcpy((uint8_t*)&res, host_addr, sizeof(cheri_reg_inmem_t));
       }
-      
+
       cap_register_t converted;
-      convertCheriReg(&converted, &ret_reg);
       decompress_128cap(res.pesbt, res.cursor, &converted);
+      retrieveCheriReg(&ret_reg, &converted);
       return ret_reg;
 #else
       cheri_reg_t res;
