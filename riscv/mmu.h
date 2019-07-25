@@ -176,7 +176,10 @@ public:
       cheri_reg_t ret_reg;
       if (auto host_addr = sim->addr_to_mem(paddr)) {
         memcpy((uint8_t*)&res, host_addr, sizeof(cheri_reg_inmem_t));
+      } else {
+        throw trap_load_access_fault(paddr);
       }
+
 
       cap_register_t converted;
       decompress_128cap(res.pesbt, res.cursor, &converted);
@@ -186,7 +189,10 @@ public:
       cheri_reg_t res;
       if (auto host_addr = sim->addr_to_mem(paddr)) {
         memcpy((uint8_t*)&res, host_addr, sizeof(cheri_reg_inmem_t));
+      } else {
+        throw trap_load_access_fault(paddr);
       }
+
 
       return res;
 #endif
@@ -330,6 +336,8 @@ public:
 #else
           memcpy(host_addr, (const uint8_t*)&val, sizeof(cheri_reg_inmem_t));
 #endif
+        } else {
+          throw trap_store_access_fault(paddr);
         }
       }
     }

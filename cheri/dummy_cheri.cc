@@ -67,7 +67,11 @@ void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source) {
 void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source) {
   destination->offset = source->cr_offset;
   destination->base = source->cr_base;
-  destination->length = (uint64_t) (source->_cr_length - 1);
+  if(source->_cr_length == 0) {
+    destination->length = 0;
+  } else {
+    destination->length = (uint64_t) (source->_cr_length - 1);
+  }
   destination->perms = source->cr_perms;
   destination->uperms = source->cr_uperms;
   destination->otype = source->cr_otype;
