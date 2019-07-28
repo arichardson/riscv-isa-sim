@@ -51,9 +51,9 @@ if (CHERI->get_mode()) {
     CHERI->raise_trap(CAUSE_CHERI_PERMIT_STORE_FAULT, insn.cs1());
   }
 
-  reg_t addr = CS1.base + CS1.offset;
+  reg_t addr = CS1.base + CS1.offset + insn.s_imm();
 
-  if (addr + 8 > CS1.base + CS1.length + insn.s_imm()) {
+  if (addr + 8 > CS1.base + CS1.length) {
   #if DEBUG
     printf("CHERI: Trying to store with wrong bounds\n");
   #endif
