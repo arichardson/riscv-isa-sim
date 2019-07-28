@@ -177,6 +177,7 @@ private:
 
 #ifdef CHERI_MERGED_RF
 #define READ_REG(reg) (STATE.XPR[reg].base + STATE.XPR[reg].offset)
+#define READ_REG_MERGED(reg) (STATE.XPR[reg])
 
 #define WRITE_REG_MERGED(reg, value) ({ \
     cheri_reg_t wdata = (value); /* value may have side effects */ \
