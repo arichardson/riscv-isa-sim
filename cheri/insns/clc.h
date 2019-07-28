@@ -1,6 +1,6 @@
 // See LICENSE_CHERI for license details.
 
-reg_t addr  = READ_REG(insn.cs1()) + insn.s_imm();
+reg_t addr  = READ_REG(insn.cs1()) + insn.i_imm();
 
 reg_t paddr = CHERI->get_mmu()->translate(addr, 1, LOAD);
 
