@@ -7,7 +7,7 @@ reg_t cb_ptr = cb_val.base + cb_val.offset;
 
 if (!cb_val.tag) {
   CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
-} else if (CS1.otype != OTYPE_UNSEALED) {
+} else if (CS1.sealed) {
   CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
 } else if ((CS1.perms & BIT(CHERI_PERMIT_EXECUTE)) != BIT(CHERI_PERMIT_EXECUTE)) {
 #if DEBUG
