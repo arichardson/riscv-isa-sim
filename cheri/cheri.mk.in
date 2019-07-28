@@ -84,8 +84,8 @@ cheri_insn_list = \
 	sqcap \
 	ctag \
 	creadhpmcounter \
-	clc \
-	csc \
+	clc  \
+	csc  \
 #	lc \
 	sc \
 	cmovz \

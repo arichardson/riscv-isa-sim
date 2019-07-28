@@ -755,7 +755,7 @@
 #define MASK_CTOPTR  0xfe00707f
 #define MATCH_CFROMPTR 0x2600005b
 #define MASK_CFROMPTR  0xfe00707f
-#define MATCH_CSUB 0x1400005b
+#define MATCH_CSUB 0x2800005b
 #define MASK_CSUB  0xfe00707f
 #define MATCH_CJR 0xfff1805b
 #define MASK_CJR  0xfffff07f
