@@ -2,7 +2,7 @@
 
 // FIXME: This instruction implementation is not complete
 
-reg_t addr = READ_REG(insn.scrs()) + insn.s_imm();
+reg_t addr = READ_REG(insn.cs1()) + insn.s_imm();
 cheri_reg_t cs = CHERI_STATE.reg_file[insn.cs2()];
 
 reg_t paddr = CHERI->get_mmu()->translate(addr, 1, STORE);
