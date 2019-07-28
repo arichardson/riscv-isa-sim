@@ -218,6 +218,26 @@ reg_t sim_t::get_reg(const std::vector<std::string>& args)
 #endif
 }
 
+cheri_reg_t sim_t::get_creg(const std::vector<std::string>& args)
+{
+  if(args.size() != 2)
+    throw trap_interactive();
+
+  processor_t *p = get_core(args[0]);
+  cheri_t *cheri = (static_cast<cheri_t*>(p->get_extension()));
+
+  unsigned long r = std::find(xpr_name, xpr_name + NXPR, args[1]) - xpr_name;
+
+  if (r >= NXPR)
+    throw trap_interactive();
+
+#ifdef CHERI_MERGED_RF
+  return p->get_state()->XPR[r];
+#else
+  return CHERI_STATE.reg_file[r];
+#endif
+}
+
 freg_t sim_t::get_freg(const std::vector<std::string>& args)
 {
   if(args.size() != 2)
@@ -341,6 +361,27 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
       creg.tag
       );
     fprintf(stderr, "\n");
+  } else {
+
+      cheri_reg_t creg = get_creg(args);
+      unsigned long r = std::find(xpr_name, xpr_name + NXPR, args[1]) - xpr_name;
+
+      fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%016" PRIx64 " | offset: 0x%016" PRIx64
+      " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016"
+      PRIx32 " | otype: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}\n",
+
+      cheri_reg_names[r],
+      creg.base,
+      creg.length,
+      creg.offset,
+
+      creg.uperms,
+      creg.perms,
+      creg.sealed,
+
+      creg.otype,
+      creg.tag
+      );
   }
 #endif
 }
