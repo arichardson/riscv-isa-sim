@@ -45,7 +45,7 @@ else {
 #endif /* CHERI_MERGED_RF */
 
 #if DEBUG
-  printf("CHERI: cjalr- - linkreg = %p jumping to %p\n", temp.offset, PCC.base
+  printf("CHERI: cjalr- - linkreg = %lu jumping to %lu\n", temp.offset, PCC.base
          + cb_val.offset);
 #endif
 

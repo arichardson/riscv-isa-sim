@@ -54,7 +54,7 @@ reg_t paddr = CHERI->get_mmu()->translate(addr, 1, LOAD);
 
 if ((unsigned) (addr + CHERI->get_clen()) > (unsigned) (CS1.base + CS1.length)) {
 #if DEBUG
-  printf("CHERI: Trying to load with wrong bounds: CS base = %p, CS length = %p, cursor = %p\n", CS1.base, CS1.length, addr + CHERI->get_clen());
+  printf("CHERI: Trying to load with wrong bounds: CS base = %lu, CS length = %lu, cursor = %lu\n", CS1.base, CS1.length, addr + CHERI->get_clen());
 #endif
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
 } else if (addr < CS1.base) {

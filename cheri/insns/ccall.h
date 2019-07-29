@@ -11,7 +11,7 @@ else if ((CS1.perms & BIT(CHERI_PERMIT_EXECUTE))) CHERI->raise_trap(CAUSE_CHERI_
 else if (CD.base + CD.offset >= CD.base + CD.length) CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cd());
 else {
   #if DEBUG
-  printf("CHERI: CCall wants to jump to %p\n", CD.offset);
+  printf("CHERI: CCall wants to jump to %lu\n", CD.offset);
   #endif
   PCC.offset = CD.offset;
 
