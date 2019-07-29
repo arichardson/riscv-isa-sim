@@ -66,10 +66,10 @@ if (addr + 8 > DDC.base + DDC.length) {
 } else {
 
 #if DEBUG
-  printf("CHERI: storing cap \n");
+  fprintf(stderr, "CHERI: storing cap reg%lu base 0x%016lx offset 0x%016lx length 0x%016lx \n", insn.cs2(), CS2.base, CS2.offset, CS2.length);
 #endif
-  CHERI->get_mmu()->store_cheri_reg(paddr, CD);
-  if (CD.tag) {
+  CHERI->get_mmu()->store_cheri_reg(paddr, CS2);
+  if (CS2.tag) {
     CHERI->cheriMem_setTag(addr);
   } else {
     CHERI->cheriMem_clearTag(addr);
