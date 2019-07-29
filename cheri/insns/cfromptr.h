@@ -1,6 +1,7 @@
 // See LICENSE_CHERI for license details.
 
 cheri_reg_t tmp = (insn.cs1() == 0)? DDC : CS1;
+tmp.offset = RS2;
 
 if (RS2 == 0) {
   WRITE_CD(CHERI_NULL_CAP);
@@ -13,7 +14,10 @@ else if (tmp.otype != OTYPE_UNSEALED) {
 /* FIXME */
 // else if (!newcap.exact) WRITE_CD(nullWithAddr(CS1.base + RS2));
 else {
-  cheri_reg_t temp = tmp;
-  temp.offset = RS2;
-  WRITE_CD(temp);
+  if(!cheri_is_representable(tmp.sealed, tmp.base, tmp.length, tmp.offset)) {
+    tmp = CHERI_NULL_CAP;
+    tmp.base = CS1.base;
+    tmp.offset = RS2;
+  }
+  WRITE_CD(tmp);
 }
