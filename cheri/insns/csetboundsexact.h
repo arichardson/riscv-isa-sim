@@ -8,7 +8,7 @@ temp.length = RS2;
 temp.offset = 0;
 
 cc128_length_t actualLength = temp.length;
-actualLength += 1;
+if(actualLength == 0xFFFFFFFFFFFFFFFF) actualLength += 1;
 
 if (!CS1.tag) {
   CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
