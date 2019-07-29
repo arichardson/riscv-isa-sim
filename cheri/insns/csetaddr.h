@@ -6,8 +6,10 @@ else {
   temp.base = CS1.base;
   temp.length = CS1.length;
   temp.offset = RS2 - CS1.base;
-  if(temp.offset > CS1.length) {
-    temp.tag = 0; 
+  cc128_length_t actualLength = temp.length;
+  actualLength += 1;
+  if(!cc128_is_representable(temp.sealed, temp.base, actualLength, temp.offset, temp.offset)) {
+    temp.tag = 0;
   }
   WRITE_CD(temp);
 }
