@@ -57,7 +57,7 @@ void cheri_t::cheriMem_setTag(reg_t addr) {
 
 bool cheri_t::cheriMem_getTag(reg_t addr) {
 #if DEBUG
-  printf("CHERI: Getting tag bit for addr = %p\n", addr);
+  printf("CHERI: Getting tag bit for addr = %lu\n", addr);
 #endif
 
   reg_t paddr = CHERI->get_mmu()->translate(addr, 1, LOAD);
