@@ -11,13 +11,10 @@ if (RS2 == 0) {
 else if (tmp.otype != OTYPE_UNSEALED) {
   CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
 }
-/* FIXME */
-// else if (!newcap.exact) WRITE_CD(nullWithAddr(CS1.base + RS2));
 else {
   if(!cheri_is_representable(tmp.sealed, tmp.base, tmp.length, tmp.offset)) {
     tmp = CHERI_NULL_CAP;
-    tmp.base = CS1.base;
-    tmp.offset = RS2;
+    tmp.offset = CS1.base + RS2;
   }
   WRITE_CD(tmp);
 }
