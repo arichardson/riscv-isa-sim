@@ -62,9 +62,11 @@ struct cheri_reg_t {
 #define OTYPE_UNSEALED 0xffffffu
 #define OTYPE_MAX 0x3ffff
 
+#define MAX_CHERI_LENGTH (0xFFFFFFFFFFFFFFFF)
+
 #define CHERI_NULL_CAP (cheri_reg_t) { \
   .base     = 0,                       \
-  .length   = 0xffffffffffffffff,      \
+  .length   = MAX_CHERI_LENGTH,      \
   .offset   = 0,                       \
   .flags    = 0,                       \
   .uperms   = 0,                       \
@@ -77,7 +79,7 @@ struct cheri_reg_t {
 
 #define CHERI_ALMIGHTY_CAP (cheri_reg_t) { \
   .base     = 0,                           \
-  .length   = 0xffffffffffffffff,          \
+  .length   = MAX_CHERI_LENGTH,          \
   .flags    = 0,                           \
   .offset   = 0,                           \
   .uperms   = 0xfu,                        \
