@@ -57,7 +57,7 @@ if (!CS1.tag) {
 reg_t addr = CS1.base + CS1.offset;
 reg_t paddr = CHERI->get_mmu()->translate(addr, 1, STORE);
 
-if ((unsigned) (addr + CHERI->get_clen()) > (unsigned) (CS1.base + CS1.length)) {
+if ((cheri_length_t) (addr + CHERI->get_clen()) > (cheri_length_t) (CS1.base + CS1.length)) {
 #if DEBUG
   printf("CHERI: Trying to store with wrong bounds\n");
 #endif

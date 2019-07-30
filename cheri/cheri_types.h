@@ -36,6 +36,9 @@
 
 #include <config.h>
 
+/* Use __uint128 to represent 65 bit length */
+__extension__ typedef unsigned __int128 cheri_length_t;
+
 /* 256-bit Caps register format *
  * -------------------------------------------------------------------------
  * | length | base | offset | uperms | perms | S | reserved | otype | Tag  |
@@ -46,7 +49,7 @@
 struct cheri_reg_t {
  public:
   uint64_t base;
-  uint64_t length;
+  cheri_length_t length;
   uint64_t offset;
 
   uint32_t flags  : 1;
@@ -62,7 +65,7 @@ struct cheri_reg_t {
 #define OTYPE_UNSEALED 0xffffffu
 #define OTYPE_MAX 0x3ffff
 
-#define MAX_CHERI_LENGTH (0xFFFFFFFFFFFFFFFF)
+#define MAX_CHERI_LENGTH ((cheri_length_t)1u << 64)
 
 #define CHERI_NULL_CAP (cheri_reg_t) { \
   .base     = 0,                       \
@@ -80,8 +83,8 @@ struct cheri_reg_t {
 #define CHERI_ALMIGHTY_CAP (cheri_reg_t) { \
   .base     = 0,                           \
   .length   = MAX_CHERI_LENGTH,          \
-  .flags    = 0,                           \
   .offset   = 0,                           \
+  .flags    = 0,                           \
   .uperms   = 0xfu,                        \
   .perms    = 0xfffu,                      \
   .sealed   = 0,                           \

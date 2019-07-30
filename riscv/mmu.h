@@ -331,11 +331,14 @@ public:
           cap_register_t converted;
           convertCheriReg(&converted, &val);
 					reg_compressed.pesbt = compress_128cap(&converted);
-					reg_compressed.cursor = val.base + val.offset;
+					reg_compressed.cursor = converted.cr_base + converted.cr_offset;
+#if DEBUG
+          fprintf(stderr, "storing cap: 0x%016lx%016lx\n", reg_compressed.cursor, reg_compressed.pesbt);
+#endif //DEBUG
           memcpy(host_addr, (const uint8_t*)&reg_compressed, sizeof(cheri_reg_inmem_t));
-#else
+#else //ENABLE_CHERI128
           memcpy(host_addr, (const uint8_t*)&val, sizeof(cheri_reg_inmem_t));
-#endif
+#endif //ENABLE_CHERI128
         } else {
           throw trap_store_access_fault(paddr);
         }

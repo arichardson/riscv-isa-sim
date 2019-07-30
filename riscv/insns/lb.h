@@ -53,12 +53,12 @@ if (CHERI->get_mode()) {
 
 	reg_t addr = CS1.base + CS1.offset + insn.i_imm();
 
-#if DEBUG
-	printf("CHERI: loading mem from addr = 0x%lx\n", addr);
-	printf("base = 0x%lx, length = 0x%lx\n", CS1.base, CS1.length);
-#endif
+// #if DEBUG
+// 	printf("CHERI: loading mem from addr = 0x%lx\n", addr);
+// 	printf("base = 0x%lx, length = 0x%lx\n", CS1.base, CS1.length);
+// #endif
 
-	if (addr + 1 > (uint64_t) (CS1.base + (uint64_t) CS1.length)) {
+	if (addr + 1 > CS1.base + CS1.length) {
 #if DEBUG
 		printf("CHERI: Trying to load with wrong bounds\n");
 #endif

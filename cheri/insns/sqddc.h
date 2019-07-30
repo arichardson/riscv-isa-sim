@@ -65,9 +65,9 @@ if (addr + 8 > DDC.base + DDC.length) {
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, (1 << 5) | CHERI_CSR_DDC);
 } else {
 
-#if DEBUG
-  fprintf(stderr, "CHERI: storing cap reg%lu base 0x%016lx offset 0x%016lx length 0x%016lx \n", insn.cs2(), CS2.base, CS2.offset, CS2.length);
-#endif
+// #if DEBUG
+//   fprintf(stderr, "CHERI: storing cap reg%lu base 0x%016lx offset 0x%016lx length 0x%016lx \n", insn.cs2(), CS2.base, CS2.offset, CS2.length);
+// #endif
   CHERI->get_mmu()->store_cheri_reg(paddr, CS2);
   if (CS2.tag) {
     CHERI->cheriMem_setTag(addr);

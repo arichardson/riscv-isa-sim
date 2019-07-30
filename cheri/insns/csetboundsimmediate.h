@@ -1,8 +1,6 @@
 // See LICENSE_CHERI for license details.
 
-//fprintf(stderr, "CHERI: set bounds immediate  base 0x%016lx offset 0x%016lx immdeiate 0x%lx length 0x%016lx.\n", CS1.base, CS1.offset, insn.i_imm(), CS1.length);
-
-uint64_t new_length = insn.i_imm() & 0x0FFF; // remove the sign extension from i_imm
+cheri_length_t new_length = insn.i_imm() & 0x0FFF; // remove the sign extension from i_imm
 
 if (!CS1.tag) {
   CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());

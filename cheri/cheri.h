@@ -67,7 +67,7 @@
     p->rvfi_dii_output.rvfi_dii_rd_addr = insn.cd(); \
   } \
   if(DEBUG) { \
-    fprintf(stderr, "x%lu <- t:%u s:%u perms:0x%08x type:0x%016x offset:0x%016lx base:0x%016lx length:0x%016lx\n", insn.cd(), val.tag, val.sealed, val.perms, val.otype, val.offset, val.base, val.length); \
+    fprintf(stderr, "x%lu <- t:%u s:%u perms:0x%08x type:0x%016x offset:0x%016lx base:0x%016lx length:0x%1lx %016lx\n", insn.cd(), val.tag, val.sealed, val.perms, val.otype, val.offset, val.base, (uint64_t) (val.length >> 64), (uint64_t) val.length & UINT64_MAX); \
   } \
 })
 #else/* CHERI_MERGED_RF */

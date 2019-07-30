@@ -54,36 +54,29 @@ REGISTER_EXTENSION(cheri, []() {
 })
 
 void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source) {
-  destination->cr_offset = source->offset;
-  destination->cr_base = source->base;
-  destination->_cr_length = ((cc128_length_t) source->length);
-  if(source->length == MAX_CHERI_LENGTH) destination->_cr_length += 1;
-  destination->cr_perms = source->perms;
-  destination->cr_uperms = source->uperms;
-  destination->cr_otype = source->otype;
-  destination->cr_tag = source->tag;
+  destination->cr_offset        = source->offset;
+  destination->cr_base          = source->base;
+  destination->_cr_length       = source->length;
+  destination->cr_perms         = source->perms;
+  destination->cr_uperms        = source->uperms;
+  destination->cr_otype         = source->otype;
+  destination->cr_tag           = source->tag;
   destination->_sbit_for_memory = source->sealed;
 }
 
 void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source) {
   destination->offset = source->cr_offset;
-  destination->base = source->cr_base;
-  if(source->_cr_length > MAX_CHERI_LENGTH) {
-    destination->length = MAX_CHERI_LENGTH;
-  } else {
-    destination->length = (uint64_t) (source->_cr_length);
-  }
-  destination->perms = source->cr_perms;
+  destination->base   = source->cr_base;
+  destination->length = source->_cr_length;
+  destination->perms  = source->cr_perms;
   destination->uperms = source->cr_uperms;
-  destination->otype = source->cr_otype;
-  destination->tag = source->cr_tag;
+  destination->otype  = source->cr_otype;
+  destination->tag    = source->cr_tag;
   destination->sealed = source->_sbit_for_memory;
 }
 
 bool cheri_is_representable(uint32_t sealed, uint64_t base, uint64_t length, uint64_t offset) {
-  cc128_length_t actualLength = length;
-  if(actualLength == MAX_CHERI_LENGTH) actualLength += 1;
-  return cc128_is_representable(sealed, base, actualLength, offset, offset);
+  return cc128_is_representable(sealed, base, length, offset, offset);
 }
 
 #endif /*ENABLE_CHERI*/

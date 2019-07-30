@@ -2,7 +2,7 @@
 
 cheri_reg_t cb_val = CS1;
 reg_t cb_base = cb_val.base;
-reg_t cb_top = cb_val.base + cb_val.length;
+cheri_length_t cb_top = cb_val.base + cb_val.length;
 reg_t cb_ptr = cb_val.base + cb_val.offset;
 
 if (!cb_val.tag) {
@@ -40,7 +40,7 @@ else {
 
 #ifdef CHERI_MERGED_RF
   WRITE_CD_MERGED(temp);
-#else 
+#else
   WRITE_CD(temp);
 #endif /* CHERI_MERGED_RF */
 
