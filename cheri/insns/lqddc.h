@@ -66,5 +66,11 @@ if (addr + 8 > DDC.base + DDC.length || addr + 8 < addr) {
 #if DEBUG
   printf("CHERI: loading cap \n");
 #endif
-  WRITE_CD(CHERI->get_mmu()->load_cheri_reg(paddr));
+  cheri_reg_t tmp = CHERI->get_mmu()->load_cheri_reg(paddr);
+  if(CHERI->cheriMem_getTag(addr)) {
+    tmp.tag = 1;
+  } else {
+    tmp.tag = 0;
+  }
+  WRITE_CD(tmp);
 }
