@@ -75,7 +75,7 @@ void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source) {
   destination->sealed = source->_sbit_for_memory;
 }
 
-bool cheri_is_representable(uint32_t sealed, uint64_t base, uint64_t length, uint64_t offset) {
+bool cheri_is_representable(uint32_t sealed, uint64_t base, cheri_length_t length, uint64_t offset) {
   return cc128_is_representable(sealed, base, length, offset, offset);
 }
 

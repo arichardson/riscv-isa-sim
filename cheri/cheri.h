@@ -165,7 +165,7 @@ void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source);
 
 void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source);
 
-bool cheri_is_representable(uint32_t sealed, uint64_t base, uint64_t length, uint64_t offset);
+bool cheri_is_representable(uint32_t sealed, uint64_t base, cheri_length_t length, uint64_t offset);
 
 #endif /* _RISCV_CHERI_H */
 #endif /* ENABLE_CHERI */
