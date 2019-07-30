@@ -31,7 +31,7 @@ if (!cb_val.tag) {
 else {
 #if DEBUG
   if(cb_ptr % 4 != 0) {
-    fprintf(stderr, "cjalr: ERROR jump to unaligned PC not supported!!!")
+    fprintf(stderr, "cjalr: ERROR jump to unaligned PC not supported!!!");
   }
 #endif //DEBUG
   cheri_reg_t temp = PCC;
