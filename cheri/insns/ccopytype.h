@@ -4,8 +4,8 @@ if (!CS1.tag) CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
 else if (CS1.sealed) CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
 else if (!CS2.sealed) {
   cheri_reg_t temp = CHERI_NULL_CAP;
-  temp.offset = 0xFFFFFFFFFFFFFFFF;
-  WRITE_CD(temp); 
+  temp.offset = UINT64_MAX;
+  WRITE_CD(temp);
 }
 else if (CS2.otype < CS1.base) CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
 else if (CS2.otype >= CS1.base + CS1.length) CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());

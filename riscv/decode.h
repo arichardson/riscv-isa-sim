@@ -190,9 +190,9 @@ private:
     p->rvfi_dii_output.rvfi_dii_rd_addr = insn.rd(); \
   } \
 })
-#else
+#else //CHERI_MERGED_RF
 #define READ_REG(reg) STATE.XPR[reg]
-#endif
+#endif //CHERI_MERGED_RF
 
 #define READ_FREG(reg) STATE.FPR[reg]
 #define RS1 READ_REG(insn.rs1())
@@ -246,7 +246,7 @@ private:
 #define dirty_ext_state (STATE.mstatus |= MSTATUS_XS | (xlen == 64 ? MSTATUS64_SD : MSTATUS32_SD))
 #define DO_WRITE_FREG(reg, value) (STATE.FPR.write(reg, value), dirty_fp_state)
 #define WRITE_FRD(value) WRITE_FREG(insn.rd(), value)
- 
+
 #define SHAMT (insn.i_imm() & 0x3F)
 #define BRANCH_TARGET (pc + insn.sb_imm())
 #define JUMP_TARGET (pc + insn.uj_imm())

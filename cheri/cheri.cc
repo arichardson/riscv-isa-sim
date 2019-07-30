@@ -134,20 +134,21 @@ std::vector<disasm_insn_t*> cheri_t::get_disasms() {
 
 /* Override extension functions */
 void cheri_t::reset() {
-  uint64_t length_mask = MASK(((sizeof(state.csrs_reg_file[CHERI_CSR_PCC].length) * 8)) - 1);
+  //uint64_t length_mask = MASK(((sizeof(state.csrs_reg_file[CHERI_CSR_PCC].length) * 8)) - 1);
   memset(&state.reg_file, 0, sizeof(state.reg_file));
   memset(&state.csrs_reg_file, 0, sizeof(state.csrs_reg_file));
 
   /* Nullify all CHERI GPRs */
+  //TODO does this still work with the bigger length type?
   for (int i = 0; i < NUM_CHERI_REGS; i++) {
-    state.reg_file[i].length = length_mask;
+    state.reg_file[i].length = MAX_CHERI_LENGTH;
   }
 
   /* Initialize pcc and ddc */
   /* FIXME: Need to decide what permissions to be set for PCC (i.e. no store) */
-  state.csrs_reg_file[CHERI_CSR_PCC] = {0, -1ul, 0, 0, 0xfu, 0xfffu, 0, OTYPE_UNSEALED, 0, 1};
+  state.csrs_reg_file[CHERI_CSR_PCC] = CHERI_ALMIGHTY_CAP;
   /* FIXME: Need to decide what permissions to be set for DDC (i.e. no execute) */
-  state.csrs_reg_file[CHERI_CSR_DDC] = {0, -1ul, 0, 0, 0xfu, 0xfffu, 0, OTYPE_UNSEALED, 0, 1};
+  state.csrs_reg_file[CHERI_CSR_DDC] = CHERI_ALMIGHTY_CAP;
 
   /* Set cap size to 2*xlen; i.e., 128 cap size for RV64 and 64 for RV32 */
 #ifdef ENABLE_CHERI128

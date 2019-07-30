@@ -67,7 +67,7 @@
     p->rvfi_dii_output.rvfi_dii_rd_addr = insn.cd(); \
   } \
   if(DEBUG) { \
-    fprintf(stderr, "x%lu <- t:%u s:%u perms:0x%08x type:0x%016x offset:0x%016lx base:0x%016lx length:0x%016lx\n", insn.cd(), val.tag, val.sealed, val.perms, val.otype, val.offset, val.base, val.length); \
+    fprintf(stderr, "x%lu <- t:%u s:%u perms:0x%08x type:0x%016x offset:0x%016lx base:0x%016lx length:0x%1lx %016lx\n", insn.cd(), val.tag, val.sealed, val.perms, val.otype, val.offset, val.base, (uint64_t) (val.length >> 64), (uint64_t) val.length & UINT64_MAX); \
   } \
 })
 #else/* CHERI_MERGED_RF */
@@ -165,7 +165,7 @@ void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source);
 
 void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source);
 
-bool cheri_is_representable(uint32_t sealed, uint64_t base, uint64_t length, uint64_t offset);
+bool cheri_is_representable(uint32_t sealed, uint64_t base, cheri_length_t length, uint64_t offset);
 
 #endif /* _RISCV_CHERI_H */
 #endif /* ENABLE_CHERI */
