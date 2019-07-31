@@ -139,9 +139,9 @@ void state_t::reset(reg_t max_isa)
   /* Init all registers to almighty to make testing easier */
   cheri_reg_t init_reg = CHERI_ALMIGHTY_CAP;
   fprintf(stderr, "otype = %x\n", init_reg.otype);
-#else
+#else //RISCV_ENABLE_RVFI_DII
   cheri_reg_t init_reg = null_cap;
-#endif
+#endif //RISCV_ENABLE_RVFI_DII
 
   XPR.write_c0(null_cap);
 

@@ -138,10 +138,21 @@ void cheri_t::reset() {
   memset(&state.reg_file, 0, sizeof(state.reg_file));
   memset(&state.csrs_reg_file, 0, sizeof(state.csrs_reg_file));
 
-  /* Nullify all CHERI GPRs */
-  //TODO does this still work with the bigger length type?
+  cheri_reg_t resetValue;
+#ifdef RISCV_ENABLE_RVFI_DII
+  resetValue = CHERI_ALMIGHTY_CAP;
+#else //RISCV_ENABLE_RVFI_DII
+  resetValue = CHERI_NULL_CAP;
+#endif //RISCV_ENABLE_RVFI_DII
+
+  /* Reset all CHERI GPRs */
   for (int i = 0; i < NUM_CHERI_REGS; i++) {
-    state.reg_file[i].length = MAX_CHERI_LENGTH;
+    state.reg_file[i] = resetValue;
+  }
+
+  /* Rest all CHERI SCRs */
+  for (int i = 0; i < NUM_CHERI_CSR_REGS; i++) {
+    state.csrs_reg_file[i] = resetValue;
   }
 
   /* Initialize pcc and ddc */
