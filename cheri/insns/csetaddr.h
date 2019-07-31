@@ -7,7 +7,8 @@ else {
   temp.length = CS1.length;
   temp.offset = RS2 - CS1.base;
   if(!cheri_is_representable(temp.sealed, temp.base, temp.length, temp.offset)) {
-    temp.tag = 0;
+    temp = CHERI_NULL_CAP;
+    temp.offset = RS2;
   }
   WRITE_CD(temp);
 }
