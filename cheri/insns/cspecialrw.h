@@ -24,7 +24,7 @@ switch(insn.chs()) {
   case CHERI_CSR_MEPCC:
     if((read_only && insn.cs1() != 0) ||
       //TODO add check if current privilege is user privilege or not.
-      (needASR && (PCC.perms & BIT(CHERI_PERMIT_ACCESS_SYSTEM_REGISTERS)))
+      (needASR && !(PCC.perms & BIT(CHERI_PERMIT_ACCESS_SYSTEM_REGISTERS)))
       ) {
       CHERI->raise_trap(CAUSE_CHERI_ACCESSPERM_FAULT, insn.chs());
     } else {
