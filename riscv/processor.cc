@@ -322,6 +322,7 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
     state.sccsr = cheri->get_ccsr();
     cheri->state.csrs_reg_file[CHERI_CSR_SEPCC] = cheri->state.csrs_reg_file[CHERI_CSR_PCC];
+    cheri->state.csrs_reg_file[CHERI_CSR_SEPCC].offset = epc - cheri->state.csrs_reg_file[CHERI_CSR_PCC].base;
     cheri->state.csrs_reg_file[CHERI_CSR_PCC] = cheri->state.csrs_reg_file[CHERI_CSR_STCC];
 #endif /* ENABLE_CHERI */
     state.sepc = epc;
@@ -342,6 +343,7 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
     state.mccsr = cheri->get_ccsr();
     cheri->state.csrs_reg_file[CHERI_CSR_MEPCC] = cheri->state.csrs_reg_file[CHERI_CSR_PCC];
+    cheri->state.csrs_reg_file[CHERI_CSR_MEPCC].offset = epc - cheri->state.csrs_reg_file[CHERI_CSR_PCC].base;
     cheri->state.csrs_reg_file[CHERI_CSR_PCC] = cheri->state.csrs_reg_file[CHERI_CSR_MTCC];
 #endif /* ENABLE_CHERI */
     state.mtval = t.get_tval();

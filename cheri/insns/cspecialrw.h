@@ -6,12 +6,15 @@ switch(insn.chs()) {
   case CHERI_CSR_PCC:
   case CHERI_CSR_DDC:
   case CHERI_CSR_UTCC:
+  case CHERI_CSR_UTDC:
   case CHERI_CSR_USCRATCHC:
   case CHERI_CSR_UEPCC:
   case CHERI_CSR_STCC:
+  case CHERI_CSR_STDC:
   case CHERI_CSR_SSCRATCHC:
   case CHERI_CSR_SEPCC:
   case CHERI_CSR_MTCC:
+  case CHERI_CSR_MTDC:
   case CHERI_CSR_MSCRATCHC:
   case CHERI_CSR_MEPCC:
 
