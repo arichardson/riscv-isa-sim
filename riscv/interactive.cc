@@ -220,6 +220,7 @@ reg_t sim_t::get_reg(const std::vector<std::string>& args)
 
 cheri_reg_t sim_t::get_creg(const std::vector<std::string>& args)
 {
+#ifdef ENABLE_CHERI
   if(args.size() != 2)
     throw trap_interactive();
 
@@ -236,6 +237,7 @@ cheri_reg_t sim_t::get_creg(const std::vector<std::string>& args)
 #else
   return CHERI_STATE.reg_file[r];
 #endif
+#endif //ENABLE_CHERI
 }
 
 freg_t sim_t::get_freg(const std::vector<std::string>& args)
