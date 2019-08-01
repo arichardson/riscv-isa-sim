@@ -1,6 +1,6 @@
 // See LICENSE_CHERI for license details.
 
-reg_t cursor = CS1.base + CS1.offset;
+uint64_t cursor = CS1.base + CS1.offset;
 
 cheri_reg_t temp = CS1;
 temp.base = cursor;
@@ -13,13 +13,10 @@ if (!CS1.tag) {
 else if (CS1.otype != OTYPE_UNSEALED) {
   CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
 }
-else if (cursor < CS1.base) {
+else if (temp.base < CS1.base) {
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
 }
-else if (cursor + RS2 < cursor) {//Check for addition overflow
-  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
-}
-else if (cursor + RS2 > CS1.base + CS1.length) {
+else if (temp.base + temp.length > CS1.base + CS1.length) {
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
 }
 else if (!cheri_is_representable(CS1.sealed, temp.base, temp.length, temp.offset)) {
