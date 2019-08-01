@@ -1,6 +1,5 @@
 // See LICENSE_CHERI for license details.
 
-
 if (!CD.tag) CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cd());
 else if (!CS1.tag) CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
 else if (!CD.sealed) CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cd());
@@ -10,6 +9,7 @@ else if (!(CD.perms & BIT(CHERI_PERMIT_EXECUTE))) CHERI->raise_trap(CAUSE_CHERI_
 else if ((CS1.perms & BIT(CHERI_PERMIT_EXECUTE))) CHERI->raise_trap(CAUSE_CHERI_PERMIT_EXECUTE_FAULT, insn.cs1());
 else if (CD.base + CD.offset >= CD.base + CD.length) CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cd());
 else {
+  //TODO should this not call a trap and let the OS handle it?
   #if DEBUG
   printf("CHERI: CCall wants to jump to %lu\n", CD.offset);
   #endif
