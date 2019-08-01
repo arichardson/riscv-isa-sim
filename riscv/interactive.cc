@@ -213,9 +213,9 @@ reg_t sim_t::get_reg(const std::vector<std::string>& args)
 
 #ifdef CHERI_MERGED_RF
   return p->get_state()->XPR[r].offset;
-#else
+#else //CHERI_MERGED_RF
   return p->get_state()->XPR[r];
-#endif
+#endif //CHERI_MERGED_RF
 }
 
 cheri_reg_t sim_t::get_creg(const std::vector<std::string>& args)
@@ -234,9 +234,9 @@ cheri_reg_t sim_t::get_creg(const std::vector<std::string>& args)
 
 #ifdef CHERI_MERGED_RF
   return p->get_state()->XPR[r];
-#else
+#else //CHERI_MERGED_RF
   return CHERI_STATE.reg_file[r];
-#endif
+#endif //CHERI_MERGED_RF
 #endif //ENABLE_CHERI
 }
 
@@ -265,9 +265,9 @@ void sim_t::interactive_reg(const std::string& cmd, const std::vector<std::strin
 
 #ifdef CHERI_MERGED_RF
       fprintf(stderr, "%-4s: 0x%016" PRIx64 "  ", xpr_name[r], p->get_state()->XPR[r].offset);
-#else
+#else //CHERI_MERGED_RF
       fprintf(stderr, "%-4s: 0x%016" PRIx64 "  ", xpr_name[r], p->get_state()->XPR[r]);
-#endif
+#endif //CHERI_MERGED_RF
 
       if ((r + 1) % 4 == 0)
         fprintf(stderr, "\n");
@@ -307,16 +307,17 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
     for (int r = 0; r < NUM_CHERI_REGS; ++r) {
 #ifdef CHERI_MERGED_RF
       creg = p->get_state()->XPR[r];
-#else
+#else //CHERI_MERGED_RF
       creg = CHERI_STATE.reg_file[r];
-#endif
+#endif //CHERI_MERGED_RF
 
-      fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%016" PRIx64 " | offset: 0x%016" PRIx64
+      fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 " %016" PRIx64 " | offset: 0x%016" PRIx64
       " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
 
       cheri_reg_names[r],
       creg.base,
-      creg.length,
+      (uint64_t)(creg.length >> 64),
+      (uint64_t)(creg.length & UINT64_MAX),
       creg.offset,
 
       creg.uperms,
@@ -331,11 +332,12 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
     }
 
     creg = PCC;
-    fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%016" PRIx64 " | offset: 0x%016" PRIx64
+    fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 "%016" PRIx64 " | offset: 0x%016" PRIx64
     " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
       "PCC",
       creg.base,
-      creg.length,
+      (uint64_t)(creg.length >> 64),
+      (uint64_t)(creg.length & UINT64_MAX),
       creg.offset,
 
       creg.uperms,
@@ -348,11 +350,12 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
     fprintf(stderr, "\n");
 
     creg = DDC;
-    fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%016" PRIx64 " | offset: 0x%016" PRIx64
+    fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 "%016" PRIx64 " | offset: 0x%016" PRIx64
     " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
       "DDC",
       creg.base,
-      creg.length,
+      (uint64_t)(creg.length >> 64),
+      (uint64_t)(creg.length & UINT64_MAX),
       creg.offset,
 
       creg.uperms,
@@ -368,13 +371,14 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
       cheri_reg_t creg = get_creg(args);
       unsigned long r = std::find(xpr_name, xpr_name + NXPR, args[1]) - xpr_name;
 
-      fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%016" PRIx64 " | offset: 0x%016" PRIx64
+      fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 "%016" PRIx64 " | offset: 0x%016" PRIx64
       " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016"
       PRIx32 " | otype: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}\n",
 
       cheri_reg_names[r],
       creg.base,
-      creg.length,
+      (uint64_t)(creg.length >> 64),
+      (uint64_t)(creg.length & UINT64_MAX),
       creg.offset,
 
       creg.uperms,
@@ -385,7 +389,7 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
       creg.tag
       );
   }
-#endif
+#endif //ENABLE_CHERI
 }
 
 void sim_t::interactive_fregd(const std::string& cmd, const std::vector<std::string>& args)
@@ -471,7 +475,7 @@ void sim_t::interactive_until(const std::string& cmd, const std::vector<std::str
   reg_t val = strtol(args[args.size()-1].c_str(),NULL,16);
   if(val == LONG_MAX)
     val = strtoul(args[args.size()-1].c_str(),NULL,16);
-  
+
   std::vector<std::string> args2;
   args2 = std::vector<std::string>(args.begin()+1,args.end()-1);
 
