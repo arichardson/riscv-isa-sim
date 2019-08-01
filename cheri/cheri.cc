@@ -149,6 +149,7 @@ void cheri_t::reset() {
   for (int i = 0; i < NUM_CHERI_REGS; i++) {
     state.reg_file[i] = resetValue;
   }
+  state.reg_file[0] = CHERI_NULL_CAP; //The zero should be hard-coded to the null cap.
 
   /* Rest all CHERI SCRs */
   for (int i = 0; i < NUM_CHERI_CSR_REGS; i++) {
