@@ -134,6 +134,9 @@ std::vector<disasm_insn_t*> cheri_t::get_disasms() {
 
 /* Override extension functions */
 void cheri_t::reset() {
+#ifdef DEBUG
+  fprintf(stderr, "cheri.cc: resetting cheri regs.\n");
+#endif //DEBUG
   //uint64_t length_mask = MASK(((sizeof(state.csrs_reg_file[CHERI_CSR_PCC].length) * 8)) - 1);
   memset(&state.reg_file, 0, sizeof(state.reg_file));
   memset(&state.csrs_reg_file, 0, sizeof(state.csrs_reg_file));
@@ -158,17 +161,33 @@ void cheri_t::reset() {
     state.csrs_reg_file[i] = resetValue;
   }
 
+  //Taken from Table 5.2 from the cheri architecture spec.
   /* Initialize pcc and ddc */
   /* FIXME: Need to decide what permissions to be set for PCC (i.e. no store) */
   state.csrs_reg_file[CHERI_CSR_PCC] = CHERI_ALMIGHTY_CAP;
   /* FIXME: Need to decide what permissions to be set for DDC (i.e. no execute) */
   state.csrs_reg_file[CHERI_CSR_DDC] = CHERI_ALMIGHTY_CAP;
 
+  state.csrs_reg_file[CHERI_CSR_UTCC] = CHERI_ALMIGHTY_CAP;
+  state.csrs_reg_file[CHERI_CSR_UTDC] = CHERI_NULL_CAP;
+  state.csrs_reg_file[CHERI_CSR_USCRATCHC] = CHERI_NULL_CAP;
+  state.csrs_reg_file[CHERI_CSR_UEPCC] = CHERI_ALMIGHTY_CAP;
+
+  state.csrs_reg_file[CHERI_CSR_STCC] = CHERI_ALMIGHTY_CAP;
+  state.csrs_reg_file[CHERI_CSR_STDC] = CHERI_NULL_CAP;
+  state.csrs_reg_file[CHERI_CSR_SSCRATCHC] = CHERI_NULL_CAP;
+  state.csrs_reg_file[CHERI_CSR_SEPCC] = CHERI_ALMIGHTY_CAP;
+
+  state.csrs_reg_file[CHERI_CSR_MTCC] = CHERI_ALMIGHTY_CAP;
+  state.csrs_reg_file[CHERI_CSR_MTDC] = CHERI_NULL_CAP;
+  state.csrs_reg_file[CHERI_CSR_MSCRATCHC] = CHERI_NULL_CAP;
+  state.csrs_reg_file[CHERI_CSR_MEPCC] = CHERI_ALMIGHTY_CAP;
+
   /* Set cap size to 2*xlen; i.e., 128 cap size for RV64 and 64 for RV32 */
 #ifdef ENABLE_CHERI128
   clen = 2 * p->get_xlen();
-#else
+#else //ENABLE_CHERI128
   clen = 4 * p->get_xlen();
-#endif
+#endif //ENABLE_CHERI128
 };
 #endif

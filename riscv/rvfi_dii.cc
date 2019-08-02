@@ -46,6 +46,7 @@
 #include "rvfi_dii.h"
 #include "processor.h"
 #include "sim.h"
+#include "cheri.h"
 
 /////////// rvfi_dii_t
 
@@ -53,7 +54,7 @@ rvfi_dii_t::rvfi_dii_t(uint16_t port) :
   socket_fd(0),
   client_fd(0)
 {
-  socket_fd = socket(AF_INET, SOCK_STREAM, 0); 
+  socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (socket_fd == -1) {
     fprintf(stderr, "remote_rvfi_dii failed to make socket: %s (%d)\n",
         strerror(errno), errno);
@@ -109,7 +110,7 @@ void rvfi_dii_t::accept()
       fprintf(stderr, "failed to accept on socket: %s (%d)\n", strerror(errno),
           errno);
       abort();
-    }   
+    }
   } else {
     fcntl(client_fd, F_SETFL, O_NONBLOCK);
   }
@@ -142,8 +143,10 @@ void rvfi_dii_t::execute_command(sim_t *s)
               s->get_core(0)->reset();
               // Overwrite the processor's PC as the reset() writes it with default RSTVECTOR (0x10000)
               s->get_core(0)->get_state()->pc = 0x80000000;
-
-              // Reset memories 
+#ifdef ENABLE_CHERI
+              (static_cast<cheri_t*>(s->get_core(0)->get_extension()))->reset();
+#endif //ENABLE_CHERI
+              // Reset memories
               std::vector<std::pair<reg_t, mem_t*>> mems = s->get_mems();
               for (auto& x : mems) {
                 mem_t *mem = static_cast<mem_t *>(x.second);
@@ -155,7 +158,7 @@ void rvfi_dii_t::execute_command(sim_t *s)
           case 'B': command = 0; fprintf(stderr, "*BLINK*\n"); break;
           case  1: {
               s->step(1, sext32(rvfi_dii_input.rvfi_dii_insn));
-              
+
               /* Send back to client */
               write_trace( &(s->get_core(0)->rvfi_dii_output));
 
