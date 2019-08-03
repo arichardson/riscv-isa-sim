@@ -48,7 +48,11 @@ class tags_t {
   }
 
   virtual void init() {};
-  virtual void reset() {};
+
+  // Zero tags on reset
+  virtual void reset() {
+    std::fill(tags.begin(), tags.end(), 0);
+  }
 
   virtual void setTag(unsigned element_idx, tag_t tagval) {
     tags[element_idx] = tagval;
