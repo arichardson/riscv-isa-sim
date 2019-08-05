@@ -76,6 +76,9 @@ void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source) {
 }
 
 bool cheri_is_representable(uint32_t sealed, uint64_t base, cheri_length_t length, uint64_t offset) {
+#if DEBUG
+  fprintf(stderr, "dummy_cheri.cc: Checking representability s:%u base:0x%016lx length:0x%1lx %016lx offset: 0x%016lx\n", sealed, base, (uint64_t)(length >> 64), (uint64_t)(length & UINT64_MAX), offset);
+#endif //DEBUG
   return cc128_is_representable(sealed, base, length, offset, offset);
 }
 
