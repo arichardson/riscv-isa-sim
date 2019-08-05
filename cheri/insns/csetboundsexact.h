@@ -19,7 +19,7 @@ else if (temp.base < CS1.base) {
 else if (temp.base + temp.length > CS1.base + CS1.length) {
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
 }
-else if (!cheri_is_representable(CS1.sealed, temp.base, temp.length, temp.offset)) {
+else if (!cheri_is_representable(temp.sealed, temp.base, temp.length, temp.offset)) {
   CHERI->raise_trap(CAUSE_CHERI_BOUNDS_FAULT, insn.cs1());
 }
 else {
