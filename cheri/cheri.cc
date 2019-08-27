@@ -140,7 +140,9 @@ void cheri_t::reset() {
   //uint64_t length_mask = MASK(((sizeof(state.csrs_reg_file[CHERI_CSR_PCC].length) * 8)) - 1);
   memset(&state.reg_file, 0, sizeof(state.reg_file));
   memset(&state.csrs_reg_file, 0, sizeof(state.csrs_reg_file));
-  memset(&mem_tags, 0, sizeof(mem_tags));
+
+  mem_tags.reset();
+
   ccsr = 0;
 
   cheri_reg_t resetValue;
