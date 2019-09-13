@@ -34,11 +34,9 @@ else {
     fprintf(stderr, "cjalr: ERROR jump to unaligned PC not supported!!!");
   }
 #endif //DEBUG
-  cheri_reg_t temp = PCC;
+  cheri_reg_t temp = GET_SCR(CHERI_SCR_PCC);
 
-  PCC = cb_val;
-  /* offset of PCC will be in pc */
-  PCC.offset = 0;
+  SET_SCR(CHERI_SCR_PCC, cb_val);
 
   // Link cap
   temp.offset = pc+4;

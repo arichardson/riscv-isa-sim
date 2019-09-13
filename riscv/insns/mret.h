@@ -9,5 +9,5 @@ p->set_privilege(prev_prv);
 p->set_csr(CSR_MSTATUS, s);
 
 #ifdef ENABLE_CHERI
-PCC = CHERI_STATE.csrs_reg_file[CHERI_CSR_MEPCC];
+SET_SCR(CHERI_SCR_PCC, GET_SCR(CHERI_SCR_MEPCC));
 #endif

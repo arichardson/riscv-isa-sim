@@ -137,9 +137,8 @@ void cheri_t::reset() {
 #ifdef DEBUG
   fprintf(stderr, "cheri.cc: resetting cheri regs.\n");
 #endif //DEBUG
-  //uint64_t length_mask = MASK(((sizeof(state.csrs_reg_file[CHERI_CSR_PCC].length) * 8)) - 1);
   memset(&state.reg_file, 0, sizeof(state.reg_file));
-  memset(&state.csrs_reg_file, 0, sizeof(state.csrs_reg_file));
+  memset(&state.scrs_reg_file, 0, sizeof(state.scrs_reg_file));
 
   mem_tags.reset();
 
@@ -159,31 +158,31 @@ void cheri_t::reset() {
   state.reg_file[0] = CHERI_NULL_CAP; //The zero should be hard-coded to the null cap.
 
   /* Rest all CHERI SCRs */
-  for (int i = 0; i < NUM_CHERI_CSR_REGS; i++) {
-    state.csrs_reg_file[i] = resetValue;
+  for (int i = 0; i < NUM_CHERI_SCR_REGS; i++) {
+    state.scrs_reg_file[i] = resetValue;
   }
 
   //Taken from Table 5.2 from the cheri architecture spec.
   /* Initialize pcc and ddc */
   /* FIXME: Need to decide what permissions to be set for PCC (i.e. no store) */
-  state.csrs_reg_file[CHERI_CSR_PCC] = CHERI_ALMIGHTY_CAP;
+  state.scrs_reg_file[CHERI_SCR_PCC] = CHERI_ALMIGHTY_CAP;
   /* FIXME: Need to decide what permissions to be set for DDC (i.e. no execute) */
-  state.csrs_reg_file[CHERI_CSR_DDC] = CHERI_ALMIGHTY_CAP;
+  state.scrs_reg_file[CHERI_SCR_DDC] = CHERI_ALMIGHTY_CAP;
 
-  state.csrs_reg_file[CHERI_CSR_UTCC] = CHERI_ALMIGHTY_CAP;
-  state.csrs_reg_file[CHERI_CSR_UTDC] = CHERI_NULL_CAP;
-  state.csrs_reg_file[CHERI_CSR_USCRATCHC] = CHERI_NULL_CAP;
-  state.csrs_reg_file[CHERI_CSR_UEPCC] = CHERI_ALMIGHTY_CAP;
+  state.scrs_reg_file[CHERI_SCR_UTCC] = CHERI_ALMIGHTY_CAP;
+  state.scrs_reg_file[CHERI_SCR_UTDC] = CHERI_NULL_CAP;
+  state.scrs_reg_file[CHERI_SCR_USCRATCHC] = CHERI_NULL_CAP;
+  state.scrs_reg_file[CHERI_SCR_UEPCC] = CHERI_ALMIGHTY_CAP;
 
-  state.csrs_reg_file[CHERI_CSR_STCC] = CHERI_ALMIGHTY_CAP;
-  state.csrs_reg_file[CHERI_CSR_STDC] = CHERI_NULL_CAP;
-  state.csrs_reg_file[CHERI_CSR_SSCRATCHC] = CHERI_NULL_CAP;
-  state.csrs_reg_file[CHERI_CSR_SEPCC] = CHERI_ALMIGHTY_CAP;
+  state.scrs_reg_file[CHERI_SCR_STCC] = CHERI_ALMIGHTY_CAP;
+  state.scrs_reg_file[CHERI_SCR_STDC] = CHERI_NULL_CAP;
+  state.scrs_reg_file[CHERI_SCR_SSCRATCHC] = CHERI_NULL_CAP;
+  state.scrs_reg_file[CHERI_SCR_SEPCC] = CHERI_ALMIGHTY_CAP;
 
-  state.csrs_reg_file[CHERI_CSR_MTCC] = CHERI_ALMIGHTY_CAP;
-  state.csrs_reg_file[CHERI_CSR_MTDC] = CHERI_NULL_CAP;
-  state.csrs_reg_file[CHERI_CSR_MSCRATCHC] = CHERI_NULL_CAP;
-  state.csrs_reg_file[CHERI_CSR_MEPCC] = CHERI_ALMIGHTY_CAP;
+  state.scrs_reg_file[CHERI_SCR_MTCC] = CHERI_ALMIGHTY_CAP;
+  state.scrs_reg_file[CHERI_SCR_MTDC] = CHERI_NULL_CAP;
+  state.scrs_reg_file[CHERI_SCR_MSCRATCHC] = CHERI_NULL_CAP;
+  state.scrs_reg_file[CHERI_SCR_MEPCC] = CHERI_ALMIGHTY_CAP;
 
   /* Set cap size to 2*xlen; i.e., 128 cap size for RV64 and 64 for RV32 */
 #ifdef ENABLE_CHERI128
@@ -192,4 +191,64 @@ void cheri_t::reset() {
   clen = 4 * p->get_xlen();
 #endif //ENABLE_CHERI128
 };
-#endif
+
+void cheri_t::set_scr(int index, cheri_reg_t val, processor_t* proc) {
+  state.scrs_reg_file[index] = val;
+  switch(index) {
+    case CHERI_SCR_PCC:
+      proc->state.pc = val.offset;
+      break;
+    // case CHERI_SCR_UTCC:
+    //   proc->state.utvec = val.offset;
+    //   break;
+    // case CHERI_SCR_UEPCC:
+    //   proc->state.uepc = val.offset;
+    //   break;
+    case CHERI_SCR_STCC:
+      proc->state.stvec = val.offset;
+      break;
+    case CHERI_SCR_SEPCC:
+      proc->state.sepc = val.offset;
+      break;
+    case CHERI_SCR_MTCC:
+      proc->state.mtvec = val.offset;
+      break;
+    case CHERI_SCR_MEPCC:
+      proc->state.mepc = val.offset;
+      break;
+    default:
+      break;
+  }
+}
+
+cheri_reg_t cheri_t::get_scr(int index, processor_t* proc) {
+  cheri_reg_t retVal = CHERI_STATE.scrs_reg_file[index];
+  switch(index) {
+    case CHERI_SCR_PCC:
+      retVal.offset = proc->state.pc;
+      break;
+    // case CHERI_SCR_UTCC:
+    //   retVal.offset = proc->state.utvec;
+    //   break;
+    // case CHERI_SCR_UEPCC:
+    //   retVal.offset = proc->state.uepc;
+    //   break;
+    case CHERI_SCR_STCC:
+      retVal.offset = proc->state.stvec;
+      break;
+    case CHERI_SCR_SEPCC:
+      retVal.offset = proc->state.sepc;
+      break;
+    case CHERI_SCR_MTCC:
+      retVal.offset = proc->state.mtvec;
+      break;
+    case CHERI_SCR_MEPCC:
+      retVal.offset = proc->state.mepc;
+      break;
+    default:
+      break;
+  }
+  return retVal;
+}
+
+#endif //ENABLE_CHERI

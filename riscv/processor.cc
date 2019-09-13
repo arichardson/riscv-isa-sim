@@ -320,9 +320,9 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
 #ifdef ENABLE_CHERI
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
     state.sccsr = cheri->get_ccsr();
-    cheri->state.csrs_reg_file[CHERI_CSR_SEPCC] = cheri->state.csrs_reg_file[CHERI_CSR_PCC];
-    cheri->state.csrs_reg_file[CHERI_CSR_SEPCC].offset = epc - cheri->state.csrs_reg_file[CHERI_CSR_PCC].base;
-    cheri->state.csrs_reg_file[CHERI_CSR_PCC] = cheri->state.csrs_reg_file[CHERI_CSR_STCC];
+    cheri->set_scr(CHERI_SCR_SEPCC, cheri->get_scr(CHERI_SCR_PCC, this), this);
+    cheri->state.scrs_reg_file[CHERI_SCR_SEPCC].offset = epc - cheri->get_scr(CHERI_SCR_PCC, this).base;
+    cheri->set_scr(CHERI_SCR_PCC, cheri->get_scr(CHERI_SCR_STCC, this), this);
 #endif /* ENABLE_CHERI */
     state.sepc = epc;
     state.stval = t.get_tval();
@@ -341,9 +341,9 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
 #ifdef ENABLE_CHERI
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
     state.mccsr = cheri->get_ccsr();
-    cheri->state.csrs_reg_file[CHERI_CSR_MEPCC] = cheri->state.csrs_reg_file[CHERI_CSR_PCC];
-    cheri->state.csrs_reg_file[CHERI_CSR_MEPCC].offset = epc - cheri->state.csrs_reg_file[CHERI_CSR_PCC].base;
-    cheri->state.csrs_reg_file[CHERI_CSR_PCC] = cheri->state.csrs_reg_file[CHERI_CSR_MTCC];
+    cheri->set_scr(CHERI_SCR_MEPCC, cheri->get_scr(CHERI_SCR_PCC, this), this);
+    cheri->state.scrs_reg_file[CHERI_SCR_MEPCC].offset = epc - cheri->get_scr(CHERI_SCR_PCC, this).base;
+    cheri->set_scr(CHERI_SCR_PCC, cheri->get_scr(CHERI_SCR_MTCC, this), this);
 #endif /* ENABLE_CHERI */
     state.mtval = t.get_tval();
 

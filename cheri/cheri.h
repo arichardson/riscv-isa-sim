@@ -47,11 +47,14 @@
 
 #define CHERI (static_cast<cheri_t*>(p->get_extension()))
 #define CHERI_STATE CHERI->state
-#define NUM_CHERI_CSR_REGS 32
+#define NUM_CHERI_SCR_REGS 32
 
-#define CSR CHERI_STATE.csrs_reg_file[insn.chs()]
-#define PCC CHERI_STATE.csrs_reg_file[CHERI_CSR_PCC]
-#define DDC CHERI_STATE.csrs_reg_file[CHERI_CSR_DDC]
+#define SCR CHERI->get_scr(insn.chs(), p)
+#define PCC CHERI->get_scr(CHERI_SCR_PCC, p)
+#define DDC CHERI_STATE.scrs_reg_file[CHERI_SCR_DDC]
+
+#define SET_SCR(index, val) CHERI->set_scr(index, val, p)
+#define GET_SCR(index) CHERI->get_scr(index, p)
 
 #ifdef CHERI_MERGED_RF
 #define NUM_CHERI_REGS 32
@@ -103,7 +106,7 @@ extern const char *cheri_reg_names[32];
 struct cheri_state {
   cheri_reg_t reg_file[NUM_CHERI_REGS];
 
-  cheri_reg_t csrs_reg_file[NUM_CHERI_CSR_REGS];
+  cheri_reg_t scrs_reg_file[NUM_CHERI_SCR_REGS];
 };
 
 typedef struct cheri_state cheri_state_t;
@@ -140,7 +143,7 @@ class cheri_t : public extension_t {
   };
 
   bool get_mode() {
-    return !!PCC.flags;
+    return !!CHERI_STATE.scrs_reg_file[CHERI_SCR_PCC].flags;
   };
 
   void raise_trap(reg_t trap_code, reg_t trap_reg) {
@@ -152,6 +155,10 @@ class cheri_t : public extension_t {
   std::vector<disasm_insn_t*> get_disasms();
 
   cheri_state_t state;
+
+  void set_scr(int index, cheri_reg_t val, processor_t* proc);
+
+  cheri_reg_t get_scr(int index, processor_t* proc);
 
  private:
   /* FIXME: For now assume DRAM size is 2GiB, the default for Spike */

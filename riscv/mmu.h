@@ -98,7 +98,7 @@ public:
       if (proc) { \
         cheri_t *cheri = (static_cast<cheri_t*>(proc->get_extension())); \
         if (cheri) { \
-          cheri_reg_t ddc = cheri->state.csrs_reg_file[CHERI_CSR_DDC]; \
+          cheri_reg_t ddc = cheri->state.scrs_reg_file[CHERI_SCR_DDC]; \
           addr += ddc.base + ddc.offset; \
         } \
       } \
@@ -219,7 +219,7 @@ public:
       if (proc) { \
         cheri_t *cheri = (static_cast<cheri_t*>(proc->get_extension())); \
         if (cheri) { \
-          cheri_reg_t ddc = cheri->state.csrs_reg_file[CHERI_CSR_DDC]; \
+          cheri_reg_t ddc = cheri->state.scrs_reg_file[CHERI_SCR_DDC]; \
           addr += ddc.base + ddc.offset; \
           /*cheri->cheriMem_clearTag(addr);*/ \
         } \
@@ -443,7 +443,7 @@ public:
   inline icache_entry_t* access_icache(reg_t addr)
   {
 #ifdef ENABLE_CHERI
-    cheri_reg_t pcc = (static_cast<cheri_t*>(proc->get_extension()))->state.csrs_reg_file[CHERI_CSR_PCC];
+    cheri_reg_t pcc = (static_cast<cheri_t*>(proc->get_extension()))->get_scr(CHERI_SCR_PCC, proc);
     addr += (sreg_t) pcc.base + (sreg_t) pcc.offset;
 #endif
     icache_entry_t* entry = &icache[icache_index(addr)];
@@ -456,7 +456,7 @@ public:
   {
     icache_entry_t entry;
 #ifdef ENABLE_CHERI
-    cheri_reg_t pcc = (static_cast<cheri_t*>(proc->get_extension()))->state.csrs_reg_file[CHERI_CSR_PCC];
+    cheri_reg_t pcc = (static_cast<cheri_t*>(proc->get_extension()))->get_scr(CHERI_SCR_PCC, proc);
     addr += (sreg_t) pcc.base + (sreg_t) pcc.offset;
 #endif
     return refill_icache(addr, &entry)->data;

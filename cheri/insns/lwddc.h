@@ -36,17 +36,17 @@ if (!DDC.tag) {
   printf("CHERI: Trying to load via untagged DDC register\n");
 #endif
 
-  CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, (1 << 5) | CHERI_CSR_DDC);
+  CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, (1 << 5) | CHERI_SCR_DDC);
 } else if (DDC.sealed) {
 #if DEBUG
   printf("CHERI: Trying to load via a sealed DDC register\n");
 #endif
-  CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, CHERI_CSR_DDC);
+  CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, CHERI_SCR_DDC);
 } else if ((DDC.perms & BIT(CHERI_PERMIT_LOAD)) != BIT(CHERI_PERMIT_LOAD)) {
 #if DEBUG
   printf("CHERI: Trying to load with no DDC LOAD permissions\n");
 #endif
-  CHERI->raise_trap(CAUSE_CHERI_PERMIT_LOAD_FAULT, (1 << 5) | CHERI_CSR_DDC);
+  CHERI->raise_trap(CAUSE_CHERI_PERMIT_LOAD_FAULT, (1 << 5) | CHERI_SCR_DDC);
 }
 
 reg_t addr = DDC.base + RS1;
@@ -55,12 +55,12 @@ if (addr + 4 > DDC.base + DDC.length) {
 #if DEBUG
   printf("CHERI: Trying to load with wrong bounds\n");
 #endif
-  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, (1 << 5) | CHERI_CSR_DDC);
+  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, (1 << 5) | CHERI_SCR_DDC);
 } else if (addr < DDC.base) {
 #if DEBUG
   printf("CHERI: Trying to load with wrong bounds\n");
 #endif
-  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, (1 << 5) | CHERI_CSR_DDC);
+  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, (1 << 5) | CHERI_SCR_DDC);
 } else {
 #if DEBUG
   printf("CHERI: loading mem \n");

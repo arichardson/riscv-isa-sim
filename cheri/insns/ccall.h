@@ -13,12 +13,9 @@ else {
   #if DEBUG
   printf("CHERI: CCall wants to jump to %lu\n", CD.offset);
   #endif
-  PCC.offset = CD.offset;
-
-  cheri_reg_t temp;
-
-  temp.sealed = 0;
-  temp.otype = 0;
+  cheri_reg_t temp = PCC;
+  temp.offset = CD.offset;
+  SET_SCR(CHERI_SCR_PCC, temp);
 
   /* IDC */
   //CHERI_STATE.reg_file[0] = CS1;
@@ -28,5 +25,5 @@ else {
   /* Set ra to pc + 4 to mimic jr */
   WRITE_REG(1, pc + 4);
 
-  return PCC.offset;
+  return temp.offset;
 }
