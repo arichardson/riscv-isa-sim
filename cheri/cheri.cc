@@ -205,16 +205,16 @@ void cheri_t::set_scr(int index, cheri_reg_t val, processor_t* proc) {
     //   proc->state.uepc = val.offset;
     //   break;
     case CHERI_SCR_STCC:
-      proc->state.stvec = val.offset;
+      proc->set_csr(CSR_STVEC, val.offset);
       break;
     case CHERI_SCR_SEPCC:
-      proc->state.sepc = val.offset;
+      proc->set_csr(CSR_SEPC, val.offset);
       break;
     case CHERI_SCR_MTCC:
-      proc->state.mtvec = val.offset;
+      proc->set_csr(CSR_MTVEC, val.offset);
       break;
     case CHERI_SCR_MEPCC:
-      proc->state.mepc = val.offset;
+      proc->set_csr(CSR_MEPC, val.offset);
       break;
     default:
       break;
