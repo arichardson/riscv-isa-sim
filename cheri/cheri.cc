@@ -234,16 +234,16 @@ cheri_reg_t cheri_t::get_scr(int index, processor_t* proc) {
     //   retVal.offset = proc->state.uepc;
     //   break;
     case CHERI_SCR_STCC:
-      retVal.offset = proc->state.stvec;
+      retVal.offset = proc->get_csr(CSR_STVEC);
       break;
     case CHERI_SCR_SEPCC:
-      retVal.offset = proc->state.sepc;
+      retVal.offset = proc->get_csr(CSR_SEPC);
       break;
     case CHERI_SCR_MTCC:
-      retVal.offset = proc->state.mtvec;
+      retVal.offset = proc->get_csr(CSR_MTVEC);
       break;
     case CHERI_SCR_MEPCC:
-      retVal.offset = proc->state.mepc;
+      retVal.offset = proc->get_csr(CSR_MEPC);
       break;
     default:
       break;
