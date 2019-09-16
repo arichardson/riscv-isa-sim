@@ -315,7 +315,8 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     deleg = state.mideleg, bit &= ~((reg_t)1 << (max_xlen-1));
   if (state.prv <= PRV_S && bit < max_xlen && ((deleg >> bit) & 1)) {
     // handle the trap in S-mode
-    state.pc = state.stvec;
+    reg_t vector = (state.stvec & 1) && interrupt ? 4*bit : 0;
+    state.pc = (state.stvec & ~(reg_t)1) + vector;
     if (rvfi_dii) {
       rvfi_dii_output.rvfi_dii_pc_wdata = state.pc;
     }
@@ -533,7 +534,7 @@ void processor_t::set_csr(int which, reg_t val)
       break;
     }
     case CSR_SEPC: state.sepc = val & ~(reg_t)1; break;
-    case CSR_STVEC: state.stvec = val >> 2 << 2; break;
+    case CSR_STVEC: state.stvec = val & ~(reg_t)2; break;
     case CSR_SSCRATCH: state.sscratch = val; break;
     case CSR_SCAUSE: state.scause = val; break;
     case CSR_STVAL: state.stval = val; break;
