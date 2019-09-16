@@ -316,6 +316,9 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
   if (state.prv <= PRV_S && bit < max_xlen && ((deleg >> bit) & 1)) {
     // handle the trap in S-mode
     state.pc = state.stvec;
+    if (rvfi_dii) {
+      rvfi_dii_output.rvfi_dii_pc_wdata = state.pc;
+    }
     state.scause = t.cause();
 #ifdef ENABLE_CHERI
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
@@ -323,6 +326,9 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     cheri->state.scrs_reg_file[CHERI_SCR_SEPCC] = cheri->get_scr(CHERI_SCR_PCC, this);
     cheri->state.scrs_reg_file[CHERI_SCR_SEPCC].offset = epc - cheri->get_scr(CHERI_SCR_PCC, this).base;
     cheri->state.scrs_reg_file[CHERI_SCR_PCC] = cheri->get_scr(CHERI_SCR_STCC, this);
+#if DEBUG
+    fprintf(stderr, "processor.cc: supervisor mode trap, PC is 0x%016lx\n", state.pc);
+#endif //DEBUG
 #endif /* ENABLE_CHERI */
     state.sepc = epc;
     state.stval = t.get_tval();
@@ -336,6 +342,9 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
   } else {
     reg_t vector = (state.mtvec & 1) && interrupt ? 4*bit : 0;
     state.pc = (state.mtvec & ~(reg_t)1) + vector;
+    if (rvfi_dii) {
+      rvfi_dii_output.rvfi_dii_pc_wdata = state.pc;
+    }
     state.mepc = epc;
     state.mcause = t.cause();
 #ifdef ENABLE_CHERI
@@ -344,6 +353,9 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     cheri->state.scrs_reg_file[CHERI_SCR_MEPCC] = cheri->get_scr(CHERI_SCR_PCC, this);
     cheri->state.scrs_reg_file[CHERI_SCR_MEPCC].offset = epc - cheri->get_scr(CHERI_SCR_PCC, this).base;
     cheri->state.scrs_reg_file[CHERI_SCR_PCC] = cheri->get_scr(CHERI_SCR_MTCC, this);
+#if DEBUG
+    fprintf(stderr, "processor.cc: machine mode trap, PC is 0x%016lx\n", state.pc);
+#endif //DEBUG
 #endif /* ENABLE_CHERI */
     state.mtval = t.get_tval();
 
