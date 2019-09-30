@@ -12,7 +12,6 @@ else {
   cheri_reg_t temp = CS1;
   temp.sealed = 0;
   temp.otype = 0;
-  /* FIXME: cs.perms.Global and ct.perms.Global */
-  temp.perms = CS1.perms & CS2.perms;
+  temp.perms &= CS2.perms | ~BIT(CHERI_PERMIT_GLOBAL);
   WRITE_CD(temp);
 }
