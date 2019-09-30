@@ -39,6 +39,11 @@
 /* Use __uint128 to represent 65 bit length */
 __extension__ typedef unsigned __int128 cheri_length_t;
 
+/* The architectural permissions bits, may be greater than the number of bits
+ * actually available in the encoding. */
+#define CHERI_USER_PERM_BITS 17
+#define CHERI_PERM_BITS      15
+
 /* 256-bit Caps register format *
  * -------------------------------------------------------------------------
  * | length | base | offset | uperms | perms | S | reserved | otype | Tag  |
@@ -53,8 +58,8 @@ struct cheri_reg_t {
   uint64_t offset;
 
   uint32_t flags  : 1;
-  uint32_t uperms : 17;
-  uint32_t perms  : 15;
+  uint32_t uperms : CHERI_USER_PERM_BITS;
+  uint32_t perms  : CHERI_PERM_BITS;
   uint32_t sealed : 1;
 
   uint32_t otype    : 24;
