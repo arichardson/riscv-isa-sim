@@ -69,7 +69,9 @@ void sim_t::interactive()
   funcs["rs"] = &sim_t::interactive_run_silent;
   funcs["reg"] = &sim_t::interactive_reg;
   funcs["freg"] = &sim_t::interactive_freg;
+#ifdef ENABLE_CHERI
   funcs["creg"] = &sim_t::interactive_creg;
+#endif //ENABLE_CHERI
   funcs["fregs"] = &sim_t::interactive_fregs;
   funcs["fregd"] = &sim_t::interactive_fregd;
   funcs["pc"] = &sim_t::interactive_pc;
@@ -218,9 +220,9 @@ reg_t sim_t::get_reg(const std::vector<std::string>& args)
 #endif //CHERI_MERGED_RF
 }
 
+#ifdef ENABLE_CHERI
 cheri_reg_t sim_t::get_creg(const std::vector<std::string>& args)
 {
-#ifdef ENABLE_CHERI
   if(args.size() != 2)
     throw trap_interactive();
 
@@ -237,8 +239,8 @@ cheri_reg_t sim_t::get_creg(const std::vector<std::string>& args)
 #else //CHERI_MERGED_RF
   return CHERI_STATE.reg_file[r];
 #endif //CHERI_MERGED_RF
-#endif //ENABLE_CHERI
 }
+#endif //ENABLE_CHERI
 
 freg_t sim_t::get_freg(const std::vector<std::string>& args)
 {
@@ -296,9 +298,9 @@ void sim_t::interactive_fregs(const std::string& cmd, const std::vector<std::str
   fprintf(stderr, "%g\n", isBoxedF32(f.r) ? (double)f.s : NAN);
 }
 
+#ifdef ENABLE_CHERI
 void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::string>& args)
 {
-#ifdef ENABLE_CHERI
   if (args.size() == 1) {
     cheri_reg_t creg;
     // Show all the regs!
@@ -389,8 +391,8 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
       creg.tag
       );
   }
-#endif //ENABLE_CHERI
 }
+#endif //ENABLE_CHERI
 
 void sim_t::interactive_fregd(const std::string& cmd, const std::vector<std::string>& args)
 {

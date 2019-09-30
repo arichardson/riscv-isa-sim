@@ -93,7 +93,9 @@ private:
   void interactive_run_silent(const std::string& cmd, const std::vector<std::string>& args);
   void interactive_reg(const std::string& cmd, const std::vector<std::string>& args);
   void interactive_freg(const std::string& cmd, const std::vector<std::string>& args);
+#ifdef ENABLE_CHERI
   void interactive_creg(const std::string& cmd, const std::vector<std::string>& args);
+#endif //ENABLE_CHERI
   void interactive_fregs(const std::string& cmd, const std::vector<std::string>& args);
   void interactive_fregd(const std::string& cmd, const std::vector<std::string>& args);
   void interactive_pc(const std::string& cmd, const std::vector<std::string>& args);
@@ -103,7 +105,9 @@ private:
   void interactive_until_silent(const std::string& cmd, const std::vector<std::string>& args);
   void interactive_until_noisy(const std::string& cmd, const std::vector<std::string>& args);
   reg_t get_reg(const std::vector<std::string>& args);
+#ifdef ENABLE_CHERI
   cheri_reg_t get_creg(const std::vector<std::string>& args);
+#endif //ENABLE_CHERI
   reg_t get_inst(const std::vector<std::string>& args);
   freg_t get_freg(const std::vector<std::string>& args);
   reg_t get_mem(const std::vector<std::string>& args);
