@@ -96,6 +96,8 @@ class sim_t;
 class rvfi_dii_interface_t
 {
 public:
+  virtual ~rvfi_dii_interface_t() = 0;
+
   // This function must be implemented by a RVDI-DII-supported platform to
   // read a RVDI-DII-supported execution command (also known as exceution trace)
   // It is considered the "input" interface of the RVDI-DII module
