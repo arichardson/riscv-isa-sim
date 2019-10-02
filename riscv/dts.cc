@@ -125,7 +125,7 @@ std::string dts_compile(const std::string& dts)
     close(dts_pipe[1]);
     close(dtb_pipe[0]);
     close(dtb_pipe[1]);
-    execl(DTC, DTC, "-O", "dtb", 0);
+    execl(DTC, DTC, "-O", "dtb", (char *)NULL);
     std::cerr << "Failed to run " DTC ": " << strerror(errno) << std::endl;
     exit(1);
   }
