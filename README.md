@@ -3,6 +3,17 @@ Spike RISC-V ISA Simulator
 
 About
 -------------
+This CHERI Spike, which is a RISC-V instruction set simulator extended with hardware capabilities. You can find a description of what CHERI is in the [instruction set architecture document](https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-927.pdf) from the university of Cambridge.
+
+Building and Running
+-------------
+You can find the most up to date method of building and running CHERI Spike by looking at the README in [the TestRIG repository](https://github.com/CTSRD-CHERI/TestRIG).
+
+Legacy README
+============================
+
+About
+-------------
 
 Spike, the RISC-V ISA Simulator, implements a functional model of one or more
 RISC-V processors.
