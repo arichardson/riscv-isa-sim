@@ -51,8 +51,6 @@ cheri_insn_list = \
 	cjr \
 	cjalr \
 	ccall \
-  ccallfast \
-	creturn \
 	ctestsubset \
 	cspecialrw \
 	lbddc \
