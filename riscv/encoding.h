@@ -761,8 +761,8 @@
 #define MASK_CJR  0xfffff07f
 #define MATCH_CJALR 0xfec0005b
 #define MASK_CJALR  0xfff0707f
-#define MATCH_CCALL 0xfc10005b
-#define MASK_CCALL  0xfff0707f
+#define MATCH_CCALL 0xfc0000db
+#define MASK_CCALL  0xfe007fff
 #define MATCH_CCHECKPERM 0xfe80005b
 #define MASK_CCHECKPERM  0xfff0707f
 #define MATCH_CCHECKTYPE 0xfe90005b
