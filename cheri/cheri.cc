@@ -41,6 +41,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+template<class tag_t, unsigned int N>
+constexpr unsigned int extract_tags_count(const tags_t<tag_t, N>&) { return N; }
+
 void cheri_t::cheriMem_setTag(reg_t addr) {
 
   reg_t paddr = CHERI->get_mmu()->translate(addr, 1, LOAD);
@@ -51,6 +54,8 @@ void cheri_t::cheriMem_setTag(reg_t addr) {
 #if DEBUG
   printf("CHERI: Setting %lu tag bit\n", paddr);
 #endif
+
+  if (paddr >= extract_tags_count(mem_tags)) return;
 
   mem_tags.setTag(paddr, true);
 }
@@ -72,6 +77,8 @@ bool cheri_t::cheriMem_getTag(reg_t addr) {
   printf("CHERI: Getting %lu tag bit\n", paddr);
 #endif
 
+  if (paddr >= extract_tags_count(mem_tags)) return false;
+
   return mem_tags.getTag(paddr);
 }
 
@@ -84,6 +91,8 @@ void cheri_t::cheriMem_clearTag(reg_t addr) {
 #if DEBUG
   printf("CHERI: Clearing %lu tag bit\n", paddr);
 #endif
+
+  if (paddr >= extract_tags_count(mem_tags)) return;
 
   mem_tags.setTag(paddr, false);
 }
