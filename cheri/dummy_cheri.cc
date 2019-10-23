@@ -56,6 +56,7 @@ REGISTER_EXTENSION(cheri, []() {
 void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source) {
   destination->cr_offset        = source->offset;
   destination->cr_base          = source->base;
+  destination->_cr_top          = ((cheri_length_t) source->base) + source->length;
   destination->cr_perms         = source->perms;
   destination->cr_uperms        = source->uperms;
   destination->cr_otype         = source->otype;
