@@ -56,7 +56,6 @@ REGISTER_EXTENSION(cheri, []() {
 void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source) {
   destination->cr_offset        = source->offset;
   destination->cr_base          = source->base;
-  destination->_cr_length       = source->length;
   destination->cr_perms         = source->perms;
   destination->cr_uperms        = source->uperms;
   destination->cr_otype         = source->otype;
@@ -67,7 +66,7 @@ void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source) {
 void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source) {
   destination->offset = source->cr_offset;
   destination->base   = source->cr_base;
-  destination->length = source->_cr_length;
+  destination->length = source->length();
   destination->perms  = source->cr_perms;
   destination->uperms = source->cr_uperms;
   destination->otype  = source->cr_otype;
