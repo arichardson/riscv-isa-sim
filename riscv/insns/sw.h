@@ -68,7 +68,7 @@ if (CHERI->get_mode()) {
     printf("CHERI: storing mem \n");
   #endif
     CHERI->cheriMem_clearTag(addr);
-    CHERI->get_mmu()->store_uint32(addr, READ_REG(insn.rd()));
+    CHERI->get_mmu()->store_uint32(addr, READ_REG(insn.rs2()));
   }
 } else {
   MMU.store_uint32(RS1 + insn.s_imm(), RS2);

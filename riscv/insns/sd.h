@@ -65,10 +65,10 @@ if (CHERI->get_mode()) {
     CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
   } else {
   #if DEBUG
-    printf("CHERI: storing mem \n");
+    printf("CHERI: storing mem [%p] = %p\n", addr, READ_REG(insn.rs2()));
   #endif
     CHERI->cheriMem_clearTag(addr);
-    CHERI->get_mmu()->store_uint64(addr, READ_REG(insn.rd()));
+    CHERI->get_mmu()->store_uint64(addr, READ_REG(insn.rs2()));
   }
 } else {
   MMU.store_uint64(RS1 + insn.s_imm(), RS2);
