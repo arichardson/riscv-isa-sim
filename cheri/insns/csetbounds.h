@@ -1,6 +1,8 @@
 // See LICENSE_CHERI for license details.
 
+#if DEBUG
 fprintf(stderr, "csetbounds: base 0x%016lx offset 0x%016lx rs2 0x%016lx\n", CS1.base, CS1.offset, RS2);
+#endif
 
 cheri_length_t new_top = 0;
 new_top += CS1.base;
