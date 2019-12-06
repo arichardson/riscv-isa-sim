@@ -314,7 +314,7 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
 #endif //CHERI_MERGED_RF
 
       fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 " %016" PRIx64 " | offset: 0x%016" PRIx64
-      " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
+      " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | flags: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
 
       cheri_reg_names[r],
       creg.base,
@@ -327,6 +327,7 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
       creg.sealed,
 
       creg.otype,
+      creg.flags,
       creg.tag
       );
 
@@ -335,7 +336,7 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
 
     creg = PCC;
     fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 "%016" PRIx64 " | offset: 0x%016" PRIx64
-    " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
+    " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | flags: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
       "PCC",
       creg.base,
       (uint64_t)(creg.length >> 64),
@@ -347,13 +348,14 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
       creg.sealed,
 
       creg.otype,
+      creg.flags,
       creg.tag
       );
     fprintf(stderr, "\n");
 
     creg = DDC;
     fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 "%016" PRIx64 " | offset: 0x%016" PRIx64
-    " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
+    " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | flags: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
       "DDC",
       creg.base,
       (uint64_t)(creg.length >> 64),
@@ -365,6 +367,7 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
       creg.sealed,
 
       creg.otype,
+      creg.flags,
       creg.tag
       );
     fprintf(stderr, "\n");
@@ -375,7 +378,7 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
 
       fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 "%016" PRIx64 " | offset: 0x%016" PRIx64
       " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016"
-      PRIx32 " | otype: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}\n",
+      PRIx32 " | otype: 0x%016" PRIx32 " | flags: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}\n",
 
       cheri_reg_names[r],
       creg.base,
@@ -388,6 +391,7 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
       creg.sealed,
 
       creg.otype,
+      creg.flags,
       creg.tag
       );
   }
