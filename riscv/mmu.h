@@ -444,7 +444,8 @@ public:
   {
 #ifdef ENABLE_CHERI
     cheri_reg_t pcc = (static_cast<cheri_t*>(proc->get_extension()))->get_scr(CHERI_SCR_PCC, proc);
-    addr += (sreg_t) pcc.base + (sreg_t) pcc.offset;
+    // addr is pcc.offset
+    addr += (sreg_t) pcc.base;
 #endif
     icache_entry_t* entry = &icache[icache_index(addr)];
     if (likely(entry->tag == addr))
