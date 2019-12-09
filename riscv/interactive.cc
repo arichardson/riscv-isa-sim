@@ -334,6 +334,63 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
       fprintf(stderr, "\n");
     }
 
+    creg = GET_SCR(CHERI_SCR_MSCRATCHC);
+    fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 "%016" PRIx64 " | offset: 0x%016" PRIx64
+    " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | flags: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
+      "MSCRATCHC",
+      creg.base,
+      (uint64_t)(creg.length >> 64),
+      (uint64_t)(creg.length & UINT64_MAX),
+      creg.offset,
+
+      creg.uperms,
+      creg.perms,
+      creg.sealed,
+
+      creg.otype,
+      creg.flags,
+      creg.tag
+      );
+    fprintf(stderr, "\n");
+
+    creg = GET_SCR(CHERI_SCR_MTCC);
+    fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 "%016" PRIx64 " | offset: 0x%016" PRIx64
+    " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | flags: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
+      "MTCC",
+      creg.base,
+      (uint64_t)(creg.length >> 64),
+      (uint64_t)(creg.length & UINT64_MAX),
+      creg.offset,
+
+      creg.uperms,
+      creg.perms,
+      creg.sealed,
+
+      creg.otype,
+      creg.flags,
+      creg.tag
+      );
+    fprintf(stderr, "\n");
+
+    creg = GET_SCR(CHERI_SCR_MEPCC);
+    fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 "%016" PRIx64 " | offset: 0x%016" PRIx64
+    " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | flags: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
+      "MEPCC",
+      creg.base,
+      (uint64_t)(creg.length >> 64),
+      (uint64_t)(creg.length & UINT64_MAX),
+      creg.offset,
+
+      creg.uperms,
+      creg.perms,
+      creg.sealed,
+
+      creg.otype,
+      creg.flags,
+      creg.tag
+      );
+    fprintf(stderr, "\n");
+
     creg = PCC;
     fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 "%016" PRIx64 " | offset: 0x%016" PRIx64
     " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | flags: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}  ",
