@@ -159,7 +159,7 @@ class cheri_t : public extension_t {
 
  private:
   /* FIXME: For now assume DRAM size is 2GiB, the default for Spike */
-  tags_t<bool, (BIT(31) / sizeof(cheri_reg_t))> mem_tags;
+  tags_t<bool, (BIT(31) / sizeof(cheri_reg_inmem_t))> mem_tags;
   uint32_t clen = 0;
   reg_t ccsr = 0;
   std::vector<insn_desc_t> instructions;

@@ -49,7 +49,7 @@ void cheri_t::cheriMem_setTag(reg_t addr) {
   reg_t paddr = CHERI->get_mmu()->translate(addr, 1, LOAD);
 
   paddr -= DRAM_BASE;
-  paddr >>= (int) log2(sizeof(cheri_reg_t));
+  paddr >>= (int) log2(sizeof(cheri_reg_inmem_t));
 
 #if DEBUG
   printf("CHERI: Setting %lu tag bit\n", paddr);
@@ -68,10 +68,7 @@ bool cheri_t::cheriMem_getTag(reg_t addr) {
   reg_t paddr = CHERI->get_mmu()->translate(addr, 1, LOAD);
 
   paddr -= DRAM_BASE;
-  paddr >>= (int) log2(sizeof(cheri_reg_t));
-
-  /* Bit location of the 64-bit work */
-  uint32_t wordShift = (uint32_t) log2(sizeof(uint64_t) * 8);
+  paddr >>= (int) log2(sizeof(cheri_reg_inmem_t));
 
 #if DEBUG
   printf("CHERI: Getting %lu tag bit\n", paddr);
@@ -86,7 +83,7 @@ void cheri_t::cheriMem_clearTag(reg_t addr) {
   reg_t paddr = CHERI->get_mmu()->translate(addr, 1, STORE);
 
   paddr -= DRAM_BASE;
-  paddr >>= (int) log2(sizeof(cheri_reg_t) * 8);
+  paddr >>= (int) log2(sizeof(cheri_reg_inmem_t));
 
 #if DEBUG
   printf("CHERI: Clearing %lu tag bit\n", paddr);
