@@ -67,7 +67,7 @@ struct cheri_reg_t {
   uint32_t tag      : 1;
 };
 
-#define OTYPE_UNSEALED 0xffffffu
+#define OTYPE_UNSEALED 0x3ffffu
 #define OTYPE_MAX 0x3ffff
 
 #define MAX_CHERI_LENGTH ((cheri_length_t)1u << 64)
