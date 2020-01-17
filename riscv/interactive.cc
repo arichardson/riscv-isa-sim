@@ -128,6 +128,8 @@ void sim_t::interactive_help(const std::string& cmd, const std::vector<std::stri
     "str <hex addr>                  # Show NUL-terminated C string\n"
     "until reg <core> <reg> <val>    # Stop when <reg> in <core> hits <val>\n"
     "until pc <core> <val>           # Stop when PC in <core> hits <val>\n"
+    "until [m|s]int <core> <val>     # Stop when an interrupt <val> get triggered in <core> in [s|m] mode\n"
+    "until [m|s]sexc <core> <val>    # Stop when an exception <val> get triggered in <core> in [s|m] mode\n"
     "untiln pc <core> <val>          # Run noisy and stop when PC in <core> hits <val>\n"
     "until mem <addr> <val>          # Stop when memory <addr> becomes <val>\n"
     "while reg <core> <reg> <val>    # Run while <reg> in <core> is <val>\n"
@@ -531,6 +533,8 @@ void sim_t::interactive_until_noisy(const std::string& cmd, const std::vector<st
 void sim_t::interactive_until(const std::string& cmd, const std::vector<std::string>& args, bool noisy)
 {
   bool cmd_until = cmd == "until" || cmd == "untiln";
+  bool until_mtrap = args[0] == "mint" || args[0] == "mexc";
+  bool until_strap = args[0] == "sint" || args[0] == "sexc";
 
   if(args.size() < 3)
     return;
@@ -546,6 +550,10 @@ void sim_t::interactive_until(const std::string& cmd, const std::vector<std::str
               args[0] == "pc"  ? &sim_t::get_pc :
               args[0] == "inst"  ? &sim_t::get_inst :
               args[0] == "mem" ? &sim_t::get_mem :
+              args[0] == "mint" ? &sim_t::get_pc :
+              args[0] == "mexc" ? &sim_t::get_pc :
+              args[0] == "sint" ? &sim_t::get_pc :
+              args[0] == "mexc" ? &sim_t::get_pc :
               NULL;
 
   if (func == NULL)
@@ -557,10 +565,28 @@ void sim_t::interactive_until(const std::string& cmd, const std::vector<std::str
   {
     try
     {
+      processor_t *p = get_core(args[1]);
       reg_t current = (this->*func)(args2);
+      reg_t mtvec = p->get_state()->mtvec;
+      reg_t mcause = p->get_state()->mcause;
+      reg_t stvec = p->get_state()->stvec;
+      reg_t scause = p->get_state()->scause;
 
-      if (cmd_until == (current == val))
-        break;
+      if (cmd_until) {
+        if (current == val)
+          break;
+        if (until_mtrap && (current == mtvec) && (val == mcause) && args[0] =="mexc")
+          break;
+        if (until_strap && (current == stvec) && (val == scause) && args[0] =="sexc")
+          break;
+        if (until_mtrap && (current == mtvec) && (val == (mcause & 0xff)) && args[0] == "mint" && (mcause >> (p->get_xlen()-1)))
+          break;
+        if (until_strap && (current == stvec) && (val == (scause & 0xff)) && args[0] == "sint" && (scause >> (p->get_xlen()-1)))
+          break;
+        if (ctrlc_pressed)
+          break;
+      }
+
       if (ctrlc_pressed)
         break;
     }
