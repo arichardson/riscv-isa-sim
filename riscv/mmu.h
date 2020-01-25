@@ -13,6 +13,7 @@
 #include "extension.h"
 #include "memtracer.h"
 #include "cachesim.h"
+#include "byteorder.h"
 #include <stdlib.h>
 #include <vector>
 
@@ -20,6 +21,7 @@
 #define PGSHIFT 12
 const reg_t PGSIZE = 1 << PGSHIFT;
 const reg_t PGMASK = ~(PGSIZE-1);
+#define MAX_PADDR_BITS 56 // imposed by Sv39 / Sv48
 
 struct insn_fetch_t
 {
@@ -89,6 +91,13 @@ public:
 #endif
   }
 
+#ifndef RISCV_ENABLE_COMMITLOG
+# define READ_MEM(addr, size) ({})
+#else
+# define READ_MEM(addr, size) \
+  proc->state.log_mem_read.push_back(std::make_tuple(addr, 0, size));
+#endif
+
   // template for functions that load an aligned value from memory
 
   #define misaligned_load_uint \
@@ -99,6 +108,7 @@ public:
     inline type##_t load_##type(reg_t addr, reg_t *paddr = NULL) { \
       type##_t data; \
       reg_t vpn = addr >> PGSHIFT; \
+      size_t size = sizeof(type##_t); \
       if (unlikely(addr & (sizeof(type##_t)-1))) { \
         misaligned_code \
       }\
@@ -123,13 +133,14 @@ public:
       goto success_load; \
       success_load: \
       if (proc) { \
+        READ_MEM(addr, size); \
         if (proc->rvfi_dii) { \
           proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
           proc->rvfi_dii_output.rvfi_dii_mem_rdata = intval_expr; \
           proc->rvfi_dii_output.rvfi_dii_mem_rmask = (1 << (rvfi_mask_bytes)) - 1; \
         } \
       } \
-      return data; \
+      return from_le(data); \
     }
 
   #define load_func(type) \
@@ -161,6 +172,13 @@ public:
   #undef load_func_impl
   #undef misaligned_load_uint
 
+#ifndef RISCV_ENABLE_COMMITLOG
+# define WRITE_MEM(addr, value, size) ({})
+#else
+# define WRITE_MEM(addr, val, size) \
+  proc->state.log_mem_write.push_back(std::make_tuple(addr, val, size));
+#endif
+
   // template for functions that store an aligned value to memory
 
   #define misaligned_store_uint \
@@ -168,12 +186,14 @@ public:
 
   #define store_func_impl(type, intval_expr, rvfi_mask_bytes, misaligned_code) \
     void store_##type(reg_t addr, type##_t val, reg_t *paddr = NULL) { \
+      reg_t vpn = addr >> PGSHIFT; \
+      size_t size = sizeof(type##_t); \
       if (unlikely(addr & (sizeof(type##_t)-1))) { \
         misaligned_code \
       } \
-      reg_t vpn = addr >> PGSHIFT; \
       if (likely(tlb_store_tag[vpn % TLB_ENTRIES] == vpn)) { \
-        *(type##_t*)(tlb_data[vpn % TLB_ENTRIES].host_offset + addr) = val; \
+        if (proc) WRITE_MEM(addr, val, size); \
+        *(type##_t*)(tlb_data[vpn % TLB_ENTRIES].host_offset + addr) = to_le(val); \
         if (paddr) \
           *paddr = tlb_data[vpn % TLB_ENTRIES].target_offset + addr; \
       } \
@@ -183,12 +203,15 @@ public:
           if (matched_trigger) \
             throw *matched_trigger; \
         } \
-        *(type##_t*)(tlb_data[vpn % TLB_ENTRIES].host_offset + addr) = val; \
+        if (proc) WRITE_MEM(addr, val, size); \
+        *(type##_t*)(tlb_data[vpn % TLB_ENTRIES].host_offset + addr) = to_le(val); \
         if (paddr) \
           *paddr = tlb_data[vpn % TLB_ENTRIES].target_offset + addr; \
       } \
-      else \
+      else { \
+        if (proc) WRITE_MEM(addr, val, size); \
         store_slow_path(addr, sizeof(type##_t), (const uint8_t*)&val, paddr); \
+      } \
       if (proc) { \
         if (proc->rvfi_dii) { \
           proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
@@ -305,26 +328,26 @@ public:
     if (ext) ext->check_ifetch_granule(addr, addr);
 
     auto tlb_entry = translate_insn_addr(addr);
-    insn_bits_t insn = *(uint16_t*)(tlb_entry.host_offset + addr);
+    insn_bits_t insn = from_le(*(uint16_t*)(tlb_entry.host_offset + addr));
     int length = insn_length(insn);
 
     if (likely(length == 4)) {
       if (ext) ext->check_ifetch_granule(addr, addr + 2);
-      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 2) << 16;
+      insn |= (insn_bits_t)from_le(*(const int16_t*)translate_insn_addr_to_host(addr + 2)) << 16;
     } else if (length == 2) {
       insn = (int16_t)insn;
     } else if (length == 6) {
-      insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 2) << 16;
+      insn |= (insn_bits_t)from_le(*(const uint16_t*)translate_insn_addr_to_host(addr + 2)) << 16;
       if (ext) ext->check_ifetch_granule(addr, addr + 2);
-      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 4) << 32;
+      insn |= (insn_bits_t)from_le(*(const int16_t*)translate_insn_addr_to_host(addr + 4)) << 32;
       if (ext) ext->check_ifetch_granule(addr, addr + 4);
     } else {
       static_assert(sizeof(insn_bits_t) == 8, "insn_bits_t must be uint64_t");
-      insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 2) << 16;
+      insn |= (insn_bits_t)from_le(*(const uint16_t*)translate_insn_addr_to_host(addr + 2)) << 16;
       if (ext) ext->check_ifetch_granule(addr, addr + 2);
-      insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 4) << 32;
+      insn |= (insn_bits_t)from_le(*(const uint16_t*)translate_insn_addr_to_host(addr + 4)) << 32;
       if (ext) ext->check_ifetch_granule(addr, addr + 4);
-      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 6) << 48;
+      insn |= (insn_bits_t)from_le(*(const int16_t*)translate_insn_addr_to_host(addr + 6)) << 48;
       if (ext) ext->check_ifetch_granule(addr, addr + 6);
     }
 
@@ -353,21 +376,21 @@ public:
 
     if (likely(length == 4)) {
       if (ext) ext->check_ifetch_granule(addr, addr + 2);
-      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 2) << 16;
+      insn |= (insn_bits_t)from_le(*(const int16_t*)translate_insn_addr_to_host(addr + 2)) << 16;
     } else if (length == 2) {
       insn = (int16_t)insn;
     } else if (length == 6) {
-      insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 2) << 16;
+      insn |= (insn_bits_t)from_le(*(const uint16_t*)translate_insn_addr_to_host(addr + 2)) << 16;
       if (ext) ext->check_ifetch_granule(addr, addr + 2);
-      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 4) << 32;
+      insn |= (insn_bits_t)from_le(*(const int16_t*)translate_insn_addr_to_host(addr + 4)) << 32;
       if (ext) ext->check_ifetch_granule(addr, addr + 4);
     } else {
       static_assert(sizeof(insn_bits_t) == 8, "insn_bits_t must be uint64_t");
-      insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 2) << 16;
+      insn |= (insn_bits_t)from_le(*(const uint16_t*)translate_insn_addr_to_host(addr + 2)) << 16;
       if (ext) ext->check_ifetch_granule(addr, addr + 2);
-      insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 4) << 32;
+      insn |= (insn_bits_t)from_le(*(const uint16_t*)translate_insn_addr_to_host(addr + 4)) << 32;
       if (ext) ext->check_ifetch_granule(addr, addr + 4);
-      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 6) << 48;
+      insn |= (insn_bits_t)from_le(*(const int16_t*)translate_insn_addr_to_host(addr + 6)) << 48;
       if (ext) ext->check_ifetch_granule(addr, addr + 6);
     }
 
@@ -475,9 +498,9 @@ private:
     }
     if (unlikely(tlb_insn_tag[vpn % TLB_ENTRIES] == (vpn | TLB_CHECK_TRIGGERS))) {
       uint16_t* ptr = (uint16_t*)(tlb_data[vpn % TLB_ENTRIES].host_offset + addr);
-      int match = proc->trigger_match(OPERATION_EXECUTE, addr, *ptr);
+      int match = proc->trigger_match(OPERATION_EXECUTE, addr, from_le(*ptr));
       if (match >= 0) {
-        throw trigger_matched_t(match, OPERATION_EXECUTE, addr, *ptr);
+        throw trigger_matched_t(match, OPERATION_EXECUTE, addr, from_le(*ptr));
       }
     }
     return result;
@@ -503,7 +526,7 @@ private:
   }
 
   reg_t pmp_homogeneous(reg_t addr, reg_t len);
-  reg_t pmp_ok(reg_t addr, access_type type, reg_t mode);
+  reg_t pmp_ok(reg_t addr, reg_t len, access_type type, reg_t mode);
 
   bool check_triggers_fetch;
   bool check_triggers_load;

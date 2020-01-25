@@ -2,8 +2,8 @@
 
 #include <config.h>
 #ifdef ENABLE_CHERI
+#include "arith.h"
 #include "mmu.h"
-#include "mulhi.h"
 #include "softfloat.h"
 #include "internals.h"
 #include "specialize.h"
