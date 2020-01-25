@@ -70,11 +70,6 @@ void cheri_t::set_tag_translated(reg_t paddr, bool val) {
   mem_tags.setTag(paddr, val);
 }
 
-static inline long unsigned int poweroff(processor_t* p, insn_t y, long unsigned int z) {
-  MMU.get_tracer()->printstats();
-  exit(0);
-}
-
 #define CHERI_REGISTER_INSN(cheri, name, match, mask) \
   extern reg_t rv32cheri_##name(processor_t*, insn_t, reg_t); \
   extern reg_t rv64cheri_##name(processor_t*, insn_t, reg_t); \
@@ -96,11 +91,6 @@ std::vector<insn_desc_t> cheri_t::get_instructions() {
       CHERI_REGISTER_INSN(this, name, name##_match, name##_mask)
 #include "cheri_insn_list.h"
 #undef DEFINE_INSN
-
-  /* Shutdown instruction emulation */
-  register_insn((insn_desc_t) {
-    0, 0xffffffff, poweroff, poweroff
-  });
 
   return instructions;
 }
