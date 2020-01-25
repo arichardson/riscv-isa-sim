@@ -1363,10 +1363,10 @@ Optional Features:
                           stores
   --enable-rvfi-dii       Enable RISC-V Formal Interface - Direct Instruction
                           Injection
-  --enable-cheri          Enable CHERI Extension
-  --enable-mergedrf       Enable Merged Register File
+  --disable-cheri         Disable CHERI Extension
+  --disable-mergedrf      Disable Merged Register File
   --enable-hpm            Enable Hardware Performance Monitor
-  --enable-cheri128       Enable CHERI 128 Compression
+  --disable-cheri128      Disable CHERI 128 Compression
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -4841,31 +4841,47 @@ $as_echo "#define RISCV_ENABLE_RVFI_DII /**/" >>confdefs.h
 
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable CHERI" >&5
+$as_echo_n "checking whether to enable CHERI... " >&6; }
 # Check whether --enable-cheri was given.
 if test "${enable_cheri+set}" = set; then :
   enableval=$enable_cheri;
 fi
 
-if test "x$enable_cheri" = "xyes"; then :
+if test "x$enable_cheri" != "xno"; then :
 
+  enable_cheri=yes
 
 $as_echo "#define ENABLE_CHERI /**/" >>confdefs.h
 
 
 fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $enable_cheri" >&5
+$as_echo "$enable_cheri" >&6; }
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable CHERI merged register file" >&5
+$as_echo_n "checking whether to enable CHERI merged register file... " >&6; }
 # Check whether --enable-mergedrf was given.
 if test "${enable_mergedrf+set}" = set; then :
   enableval=$enable_mergedrf;
+else
+  enable_mergedrf=$enable_cheri
 fi
 
-if test "x$enable_mergedrf" = "xyes"; then :
+if test "x$enable_mergedrf" != "xno"; then :
 
+  if  test "x$enable_cheri" = "xno" ; then :
+  as_fn_error $? "Cannot enable merged register file without CHERI" "$LINENO" 5
+
+fi
+  enable_mergedrf=yes
 
 $as_echo "#define CHERI_MERGED_RF /**/" >>confdefs.h
 
 
 fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $enable_mergedrf" >&5
+$as_echo "$enable_mergedrf" >&6; }
 
 # Check whether --enable-hpm was given.
 if test "${enable_hpm+set}" = set; then :
@@ -4976,18 +4992,29 @@ ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ex
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable CHERI 128 compression" >&5
+$as_echo_n "checking whether to enable CHERI 128 compression... " >&6; }
 # Check whether --enable-cheri128 was given.
 if test "${enable_cheri128+set}" = set; then :
   enableval=$enable_cheri128;
+else
+  enable_cheri128=$enable_cheri
 fi
 
-if test "x$enable_cheri128" = "xyes"; then :
+if test "x$enable_cheri128" != "xno"; then :
 
+  if  test "x$enable_cheri" = "xno" ; then :
+  as_fn_error $? "Cannot enable CHERI 128 compression without CHERI" "$LINENO" 5
+
+fi
+  enable_cheri128=yes
 
 $as_echo "#define ENABLE_CHERI128 /**/" >>confdefs.h
 
 
 fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $enable_cheri128" >&5
+$as_echo "$enable_cheri128" >&6; }
 
 
 
