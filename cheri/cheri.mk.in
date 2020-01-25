@@ -85,8 +85,6 @@ cheri_insn_list = \
 	csc  \
 #	lc \
 	sc \
-	cmovz \
-	cmovn \
 
 cheri_gen_srcs = \
 	$(addsuffix .cc,$(cheri_insn_list))
