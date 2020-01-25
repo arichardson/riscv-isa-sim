@@ -31,50 +31,5 @@
  * SUCH DAMAGE.
  */
 
-if (!CS1.tag) {
-#if DEBUG
-  printf("CHERI: Trying to store via untagged cap register\n");
-#endif
-
-  CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
-} else if (CS1.sealed) {
-#if DEBUG
-  printf("CHERI: Trying to store via a sealed cap register\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
-} else if ((CS1.perms & BIT(CHERI_PERMIT_STORE)) != BIT(CHERI_PERMIT_STORE)) {
-#if DEBUG
-  printf("CHERI: Trying to store with no STORE permissions\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_PERMIT_LOAD_FAULT, insn.cs1());
-} else if ((CS1.perms & BIT(CHERI_PERMIT_STORE_CAPABILITY)) != BIT(CHERI_PERMIT_STORE_CAPABILITY)) {
-#if DEBUG
-  printf("CHERI: Trying to store with no STORE capability permissions\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_PERMIT_STORE_CAPABILITY_FAULT, insn.cs1());
-}
-
-reg_t addr = CS1.base + CS1.offset;
-reg_t paddr = CHERI->get_mmu()->translate(addr, 1, STORE);
-
-if ((cheri_length_t) (addr + CHERI->get_clen()) > (cheri_length_t) (CS1.base + CS1.length)) {
-#if DEBUG
-  printf("CHERI: Trying to store with wrong bounds\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
-} else if (addr < CS1.base) {
-#if DEBUG
-  printf("CHERI: Trying to store with wrong bounds\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
-} else {
-#if DEBUG
-  printf("CHERI: storing cap \n");
-#endif
-  CHERI->get_mmu()->store_cheri_reg(paddr, CD);
-  if (CD.tag) {
-    CHERI->cheriMem_setTag(addr);
-  } else {
-    CHERI->cheriMem_clearTag(addr);
-  }
-}
+require_rv64;
+CHERI->cap_store_cap(CS1, insn.cs1(), 0, CS2);

@@ -33,45 +33,9 @@
 
 #ifdef CHERI_MERGED_RF
 if (CHERI->get_mode()) {
-  if (!CS1.tag) {
-  #if DEBUG
-    printf("CHERI: Trying to store via untagged cap register\n");
-  #endif
-
-    CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
-  } else if (CS1.sealed) {
-  #if DEBUG
-    printf("CHERI: Trying to store via a sealed cap register\n");
-  #endif
-    CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
-  } else if ((CS1.perms & BIT(CHERI_PERMIT_STORE)) != BIT(CHERI_PERMIT_STORE)) {
-  #if DEBUG
-    printf("CHERI: Trying to store with no cap STORE permissions\n");
-  #endif
-    CHERI->raise_trap(CAUSE_CHERI_PERMIT_STORE_FAULT, insn.cs1());
-  }
-
-  reg_t addr = CS1.base + CS1.offset + insn.s_imm();
-
-  if (addr + 2 > CS1.base + CS1.length) {
-  #if DEBUG
-    printf("CHERI: Trying to store with wrong bounds\n");
-  #endif
-    CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
-  } else if (addr < CS1.base) {
-  #if DEBUG
-    printf("CHERI: Trying to store with wrong bounds\n");
-  #endif
-    CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
-  } else {
-  #if DEBUG
-    printf("CHERI: storing mem \n");
-  #endif
-    CHERI->cheriMem_clearTag(addr);
-    CHERI->get_mmu()->store_uint16(addr, READ_REG(insn.rs2()));
-  }
+  CHERI->cap_store_uint16(CS1, insn.cs1(), insn.s_imm(), RS2);
 } else {
-  MMU.store_uint16(RS1 + insn.s_imm(), RS2);
+  CHERI->ddc_store_uint16(RS1 + insn.s_imm(), RS2);
 }
 #else
 MMU.store_uint16(RS1 + insn.s_imm(), RS2);

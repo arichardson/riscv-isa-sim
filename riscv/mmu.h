@@ -10,11 +10,11 @@
 #include "config.h"
 #include "simif.h"
 #include "processor.h"
+#include "extension.h"
 #include "memtracer.h"
 #include "cachesim.h"
 #include <stdlib.h>
 #include <vector>
-#include "cheri.h"
 
 // virtual memory configuration
 #define PGSHIFT 12
@@ -59,23 +59,23 @@ public:
   mmu_t(simif_t* sim, processor_t* proc);
   ~mmu_t();
 
-  inline reg_t misaligned_load(reg_t addr, size_t size)
+  inline reg_t misaligned_load(reg_t addr, size_t size, reg_t *paddr)
   {
 #ifdef RISCV_ENABLE_MISALIGNED
     reg_t res = 0;
     for (size_t i = 0; i < size; i++)
-      res += (reg_t)load_uint8(addr + i) << (i * 8);
+      res += (reg_t)load_uint8(addr + i, i == 0 ? paddr : NULL) << (i * 8);
     return res;
 #else
     throw trap_load_address_misaligned(addr);
 #endif
   }
 
-  inline void misaligned_store(reg_t addr, reg_t data, size_t size)
+  inline void misaligned_store(reg_t addr, reg_t data, size_t size, reg_t *paddr)
   {
 #ifdef RISCV_ENABLE_MISALIGNED
     for (size_t i = 0; i < size; i++)
-      store_uint8(addr + i, data >> (i * 8));
+      store_uint8(addr + i, data >> (i * 8), i == 0 ? paddr : NULL);
 
     if (proc) {
       if (proc->rvfi_dii) {
@@ -90,114 +90,50 @@ public:
   }
 
   // template for functions that load an aligned value from memory
-#ifdef ENABLE_CHERI
-  #define load_func(type) \
-    inline type##_t load_##type(reg_t addr) { \
-      type##_t data = 0; \
+
+  #define misaligned_load_uint \
+    data = misaligned_load(addr, sizeof(data), paddr); \
+    goto success_load;
+
+  #define load_func_impl(type, intval_expr, rvfi_mask_bytes, misaligned_code) \
+    inline type##_t load_##type(reg_t addr, reg_t *paddr = NULL) { \
+      type##_t data; \
       reg_t vpn = addr >> PGSHIFT; \
-      if (proc) { \
-        cheri_t *cheri = (static_cast<cheri_t*>(proc->get_extension())); \
-        if (cheri) { \
-          cheri_reg_t ddc = cheri->state.scrs_reg_file[CHERI_SCR_DDC]; \
-          addr += ddc.base + ddc.offset; \
-        } \
-      } \
       if (unlikely(addr & (sizeof(type##_t)-1))) { \
-        data = misaligned_load(addr, sizeof(type##_t)); \
-        goto success_load; \
+        misaligned_code \
       }\
       if (likely(tlb_load_tag[vpn % TLB_ENTRIES] == vpn)) { \
         data = *(type##_t*)(tlb_data[vpn % TLB_ENTRIES].host_offset + addr); \
+        if (paddr) \
+          *paddr = tlb_data[vpn % TLB_ENTRIES].target_offset + addr; \
         goto success_load; \
       } \
       if (unlikely(tlb_load_tag[vpn % TLB_ENTRIES] == (vpn | TLB_CHECK_TRIGGERS))) { \
         data = *(type##_t*)(tlb_data[vpn % TLB_ENTRIES].host_offset + addr); \
+        if (paddr) \
+          *paddr = tlb_data[vpn % TLB_ENTRIES].target_offset + addr; \
         if (!matched_trigger) { \
-          matched_trigger = trigger_exception(OPERATION_LOAD, addr, data); \
+          matched_trigger = trigger_exception(OPERATION_LOAD, addr, (intval_expr)); \
           if (matched_trigger) \
             throw *matched_trigger; \
         } \
         goto success_load; \
       } \
-      load_slow_path(addr, sizeof(type##_t), (uint8_t*)&data); \
+      load_slow_path(addr, sizeof(type##_t), (uint8_t*)&data, paddr); \
       goto success_load; \
       success_load: \
       if (proc) { \
         if (proc->rvfi_dii) { \
           proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
-          proc->rvfi_dii_output.rvfi_dii_mem_rdata = data; \
-          proc->rvfi_dii_output.rvfi_dii_mem_rmask = (1 << sizeof(type##_t)) - 1; \
+          proc->rvfi_dii_output.rvfi_dii_mem_rdata = intval_expr; \
+          proc->rvfi_dii_output.rvfi_dii_mem_rmask = (1 << (rvfi_mask_bytes)) - 1; \
         } \
       } \
       return data; \
     }
-#else
+
   #define load_func(type) \
-    inline type##_t load_##type(reg_t addr) { \
-      type##_t data = 0; \
-      reg_t vpn = addr >> PGSHIFT; \
-      if (unlikely(addr & (sizeof(type##_t)-1))) { \
-        data = misaligned_load(addr, sizeof(type##_t)); \
-        goto success_load; \
-      }\
-      if (likely(tlb_load_tag[vpn % TLB_ENTRIES] == vpn)) { \
-        data = *(type##_t*)(tlb_data[vpn % TLB_ENTRIES].host_offset + addr); \
-        goto success_load; \
-      } \
-      if (unlikely(tlb_load_tag[vpn % TLB_ENTRIES] == (vpn | TLB_CHECK_TRIGGERS))) { \
-        data = *(type##_t*)(tlb_data[vpn % TLB_ENTRIES].host_offset + addr); \
-        if (!matched_trigger) { \
-          matched_trigger = trigger_exception(OPERATION_LOAD, addr, data); \
-          if (matched_trigger) \
-            throw *matched_trigger; \
-        } \
-        goto success_load; \
-      } \
-      load_slow_path(addr, sizeof(type##_t), (uint8_t*)&data); \
-      goto success_load; \
-      success_load: \
-      if (proc) { \
-        if (proc->rvfi_dii) { \
-          proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
-          proc->rvfi_dii_output.rvfi_dii_mem_rdata = data; \
-          proc->rvfi_dii_output.rvfi_dii_mem_rmask = (1 << sizeof(type##_t)) - 1; \
-        } \
-      } \
-      return data; \
-    }
-#endif
-
-#ifdef ENABLE_CHERI
-    cheri_reg_t load_cheri_reg(reg_t paddr) {
-      if (unlikely(paddr & (sizeof(cheri_reg_inmem_t)-1)))
-        throw trap_load_address_misaligned(paddr);
-#ifdef ENABLE_CHERI128
-      cheri_reg_inmem_t res;
-      cheri_reg_t ret_reg;
-      if (auto host_addr = sim->addr_to_mem(paddr)) {
-        memcpy((uint8_t*)&res, host_addr, sizeof(cheri_reg_inmem_t));
-      } else {
-        throw trap_load_access_fault(paddr);
-      }
-
-
-      cap_register_t converted;
-      decompress_128cap(res.pesbt, res.cursor, &converted);
-      retrieveCheriReg(&ret_reg, &converted);
-      return ret_reg;
-#else
-      cheri_reg_t res;
-      if (auto host_addr = sim->addr_to_mem(paddr)) {
-        memcpy((uint8_t*)&res, host_addr, sizeof(cheri_reg_inmem_t));
-      } else {
-        throw trap_load_access_fault(paddr);
-      }
-
-
-      return res;
-#endif
-    }
-#endif /* ENABLE_CHERI */
+    load_func_impl(type, data, sizeof(type##_t), misaligned_load_uint)
 
   // load value from memory at aligned address; zero extend to register width
   load_func(uint8)
@@ -211,70 +147,59 @@ public:
   load_func(int32)
   load_func(int64)
 
+#ifdef ENABLE_CHERI
+  #define misaligned_load_cap throw trap_load_address_misaligned(addr);
+#ifdef ENABLE_CHERI128
+  load_func_impl(cheri_reg_inmem, data.cursor, 8, misaligned_load_cap)
+#else
+  load_func_impl(cheri_reg_inmem, data.base + data.offset, 8, misaligned_load_cap)
+#endif
+  #undef misaligned_load_cap
+#endif
+
+  #undef load_func
+  #undef load_func_impl
+  #undef misaligned_load_uint
+
   // template for functions that store an aligned value to memory
 
-#ifdef ENABLE_CHERI
-  #define store_func(type) \
-    void store_##type(reg_t addr, type##_t val) { \
-      if (proc) { \
-        cheri_t *cheri = (static_cast<cheri_t*>(proc->get_extension())); \
-        if (cheri) { \
-          cheri_reg_t ddc = cheri->state.scrs_reg_file[CHERI_SCR_DDC]; \
-          addr += ddc.base + ddc.offset; \
-          /*cheri->cheriMem_clearTag(addr);*/ \
-        } \
+  #define misaligned_store_uint \
+    return misaligned_store(addr, val, sizeof(val), paddr);
+
+  #define store_func_impl(type, intval_expr, rvfi_mask_bytes, misaligned_code) \
+    void store_##type(reg_t addr, type##_t val, reg_t *paddr = NULL) { \
+      if (unlikely(addr & (sizeof(type##_t)-1))) { \
+        misaligned_code \
       } \
-      if (unlikely(addr & (sizeof(type##_t)-1))) \
-        return misaligned_store(addr, val, sizeof(type##_t)); \
       reg_t vpn = addr >> PGSHIFT; \
-      if (likely(tlb_store_tag[vpn % TLB_ENTRIES] == vpn)) \
+      if (likely(tlb_store_tag[vpn % TLB_ENTRIES] == vpn)) { \
         *(type##_t*)(tlb_data[vpn % TLB_ENTRIES].host_offset + addr) = val; \
+        if (paddr) \
+          *paddr = tlb_data[vpn % TLB_ENTRIES].target_offset + addr; \
+      } \
       else if (unlikely(tlb_store_tag[vpn % TLB_ENTRIES] == (vpn | TLB_CHECK_TRIGGERS))) { \
         if (!matched_trigger) { \
-          matched_trigger = trigger_exception(OPERATION_STORE, addr, val); \
+          matched_trigger = trigger_exception(OPERATION_STORE, addr, (intval_expr)); \
           if (matched_trigger) \
             throw *matched_trigger; \
         } \
         *(type##_t*)(tlb_data[vpn % TLB_ENTRIES].host_offset + addr) = val; \
-         /* cheri->cheriMem_clearTag(addr); */\
+        if (paddr) \
+          *paddr = tlb_data[vpn % TLB_ENTRIES].target_offset + addr; \
       } \
       else \
-        store_slow_path(addr, sizeof(type##_t), (const uint8_t*)&val); \
+        store_slow_path(addr, sizeof(type##_t), (const uint8_t*)&val, paddr); \
       if (proc) { \
         if (proc->rvfi_dii) { \
           proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
-          proc->rvfi_dii_output.rvfi_dii_mem_wdata = val; \
-          proc->rvfi_dii_output.rvfi_dii_mem_wmask = (1 << sizeof(val)) - 1; \
+          proc->rvfi_dii_output.rvfi_dii_mem_wdata = intval_expr; \
+          proc->rvfi_dii_output.rvfi_dii_mem_wmask = (1 << (rvfi_mask_bytes)) - 1; \
         } \
       } \
     }
-#else
+
   #define store_func(type) \
-    void store_##type(reg_t addr, type##_t val) { \
-      if (unlikely(addr & (sizeof(type##_t)-1))) \
-        return misaligned_store(addr, val, sizeof(type##_t)); \
-      reg_t vpn = addr >> PGSHIFT; \
-      if (likely(tlb_store_tag[vpn % TLB_ENTRIES] == vpn)) \
-        *(type##_t*)(tlb_data[vpn % TLB_ENTRIES].host_offset + addr) = val; \
-      else if (unlikely(tlb_store_tag[vpn % TLB_ENTRIES] == (vpn | TLB_CHECK_TRIGGERS))) { \
-        if (!matched_trigger) { \
-          matched_trigger = trigger_exception(OPERATION_STORE, addr, val); \
-          if (matched_trigger) \
-            throw *matched_trigger; \
-        } \
-        *(type##_t*)(tlb_data[vpn % TLB_ENTRIES].host_offset + addr) = val; \
-      } \
-      else \
-        store_slow_path(addr, sizeof(type##_t), (const uint8_t*)&val); \
-      if (proc) { \
-        if (proc->rvfi_dii) { \
-          proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
-          proc->rvfi_dii_output.rvfi_dii_mem_wdata = val; \
-          proc->rvfi_dii_output.rvfi_dii_mem_wmask = (1 << sizeof(val)) - 1; \
-        } \
-      } \
-    }
-#endif /* ENABLE_CHERI */
+    store_func_impl(type, val, sizeof(val), misaligned_store_uint)
 
   // template for functions that perform an atomic memory operation
   #define amo_func(type) \
@@ -321,34 +246,24 @@ public:
   store_func(uint64)
 
 #ifdef ENABLE_CHERI
-    void store_cheri_reg(reg_t paddr, cheri_reg_t val) {
-      if (unlikely(paddr & (sizeof(cheri_reg_inmem_t)-1)))
-        throw trap_store_address_misaligned(paddr);
-      else {
-        if (auto host_addr = sim->addr_to_mem(paddr)) {
+  #define misaligned_store_cap throw trap_store_address_misaligned(addr);
 #ifdef ENABLE_CHERI128
-					cheri_reg_inmem_t reg_compressed;
-          cap_register_t converted;
-          convertCheriReg(&converted, &val);
-					reg_compressed.pesbt = compress_128cap(&converted);
-					reg_compressed.cursor = converted.cr_base + converted.cr_offset;
-#if DEBUG
-          fprintf(stderr, "storing cap: 0x%016lx%016lx\n", reg_compressed.cursor, reg_compressed.pesbt);
-#endif //DEBUG
-          memcpy(host_addr, (const uint8_t*)&reg_compressed, sizeof(cheri_reg_inmem_t));
-#else //ENABLE_CHERI128
-          memcpy(host_addr, (const uint8_t*)&val, sizeof(cheri_reg_inmem_t));
-#endif //ENABLE_CHERI128
-        } else {
-          throw trap_store_access_fault(paddr);
-        }
-      }
-    }
-#endif /* ENABLE_CHERI */
+  store_func_impl(cheri_reg_inmem, val.cursor, 8, misaligned_store_cap)
+#else
+  store_func_impl(cheri_reg_inmem, val.base + val.offset, 8, misaligned_store_cap)
+#endif
+  #undef misaligned_store_cap
+#endif
+
+  #undef store_func
+  #undef store_func_impl
+  #undef misaligned_store_uint
 
   // perform an atomic memory operation at an aligned address
   amo_func(uint32)
   amo_func(uint64)
+
+  #undef amo_func
 
   inline void yield_load_reservation()
   {
@@ -386,22 +301,31 @@ public:
 
   inline icache_entry_t* refill_icache(reg_t addr, icache_entry_t* entry)
   {
+    auto *ext = proc->get_extension();
+    if (ext) ext->check_ifetch_granule(addr, addr);
+
     auto tlb_entry = translate_insn_addr(addr);
     insn_bits_t insn = *(uint16_t*)(tlb_entry.host_offset + addr);
     int length = insn_length(insn);
 
     if (likely(length == 4)) {
+      if (ext) ext->check_ifetch_granule(addr, addr + 2);
       insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 2) << 16;
     } else if (length == 2) {
       insn = (int16_t)insn;
     } else if (length == 6) {
-      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 4) << 32;
       insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 2) << 16;
+      if (ext) ext->check_ifetch_granule(addr, addr + 2);
+      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 4) << 32;
+      if (ext) ext->check_ifetch_granule(addr, addr + 4);
     } else {
       static_assert(sizeof(insn_bits_t) == 8, "insn_bits_t must be uint64_t");
-      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 6) << 48;
-      insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 4) << 32;
       insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 2) << 16;
+      if (ext) ext->check_ifetch_granule(addr, addr + 2);
+      insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 4) << 32;
+      if (ext) ext->check_ifetch_granule(addr, addr + 4);
+      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 6) << 48;
+      if (ext) ext->check_ifetch_granule(addr, addr + 6);
     }
 
     insn_fetch_t fetch = {proc->decode_insn(insn), insn};
@@ -417,50 +341,61 @@ public:
     return entry;
   }
 
-  inline insn_bits_t get_insn(reg_t addr)
+  inline insn_bits_t get_insn(reg_t pc)
   {
+    auto *ext = proc->get_extension();
+    reg_t addr = ext ? ext->pc_to_addr(pc) : pc;
+    if (ext) ext->check_ifetch_granule(addr, addr);
+
     auto tlb_entry = translate_insn_addr(addr);
     insn_bits_t insn = *(uint16_t*)(tlb_entry.host_offset + addr);
     int length = insn_length(insn);
 
     if (likely(length == 4)) {
+      if (ext) ext->check_ifetch_granule(addr, addr + 2);
       insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 2) << 16;
     } else if (length == 2) {
       insn = (int16_t)insn;
     } else if (length == 6) {
-      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 4) << 32;
       insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 2) << 16;
+      if (ext) ext->check_ifetch_granule(addr, addr + 2);
+      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 4) << 32;
+      if (ext) ext->check_ifetch_granule(addr, addr + 4);
     } else {
       static_assert(sizeof(insn_bits_t) == 8, "insn_bits_t must be uint64_t");
-      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 6) << 48;
-      insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 4) << 32;
       insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 2) << 16;
+      if (ext) ext->check_ifetch_granule(addr, addr + 2);
+      insn |= (insn_bits_t)*(const uint16_t*)translate_insn_addr_to_host(addr + 4) << 32;
+      if (ext) ext->check_ifetch_granule(addr, addr + 4);
+      insn |= (insn_bits_t)*(const int16_t*)translate_insn_addr_to_host(addr + 6) << 48;
+      if (ext) ext->check_ifetch_granule(addr, addr + 6);
     }
 
     return insn;
   }
 
-  inline icache_entry_t* access_icache(reg_t addr)
+  inline icache_entry_t* access_icache(reg_t pc)
   {
-#ifdef ENABLE_CHERI
-    cheri_reg_t pcc = (static_cast<cheri_t*>(proc->get_extension()))->get_scr(CHERI_SCR_PCC, proc);
-    // addr is pcc.offset
-    addr += (sreg_t) pcc.base;
-#endif
+    auto *ext = proc->get_extension();
+    reg_t addr = ext ? ext->pc_to_addr(pc) : pc;
+
     icache_entry_t* entry = &icache[icache_index(addr)];
-    if (likely(entry->tag == addr))
+    if (likely(entry->tag == addr)) {
+      if (ext) {
+        ext->check_ifetch_granule(addr, addr);
+        for (int i = 2; i < entry->data.insn.length(); i += 2)
+          ext->check_ifetch_granule(addr, addr + i);
+      }
       return entry;
+    }
     return refill_icache(addr, entry);
   }
 
-  inline insn_fetch_t load_insn(reg_t addr)
+  inline insn_fetch_t load_insn(reg_t pc)
   {
+    auto *ext = proc->get_extension();
+    reg_t addr = ext ? ext->pc_to_addr(pc) : pc;
     icache_entry_t entry;
-#ifdef ENABLE_CHERI
-    cheri_reg_t pcc = (static_cast<cheri_t*>(proc->get_extension()))->get_scr(CHERI_SCR_PCC, proc);
-    // addr is pcc.offset
-    addr += (sreg_t) pcc.base;
-#endif
     return refill_icache(addr, &entry)->data;
   }
 
@@ -521,8 +456,8 @@ private:
 
   // handle uncommon cases: TLB misses, page faults, MMIO
   tlb_entry_t fetch_slow_path(reg_t addr);
-  void load_slow_path(reg_t addr, reg_t len, uint8_t* bytes);
-  void store_slow_path(reg_t addr, reg_t len, const uint8_t* bytes);
+  void load_slow_path(reg_t addr, reg_t len, uint8_t* bytes, reg_t* paddr);
+  void store_slow_path(reg_t addr, reg_t len, const uint8_t* bytes, reg_t* paddr);
 #ifndef ENABLE_CHERI
   reg_t translate(reg_t addr, reg_t len, access_type type);
 #endif

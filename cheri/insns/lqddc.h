@@ -31,46 +31,5 @@
  * SUCH DAMAGE.
  */
 
-if (!DDC.tag) {
-#if DEBUG
-  printf("CHERI: Trying to load via untagged DDC register\n");
-#endif
-
-  CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, (1 << 5) | CHERI_SCR_DDC);
-} else if (DDC.sealed) {
-#if DEBUG
-  printf("CHERI: Trying to load via a sealed DDC register\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, CHERI_SCR_DDC);
-} else if ((DDC.perms & BIT(CHERI_PERMIT_LOAD)) != BIT(CHERI_PERMIT_LOAD)) {
-#if DEBUG
-  printf("CHERI: Trying to load with no DDC LOAD permissions\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_PERMIT_LOAD_FAULT, (1 << 5) | CHERI_SCR_DDC);
-}
-
-reg_t addr = DDC.base + DDC.offset + RS1;
-reg_t paddr = CHERI->get_mmu()->translate(addr, 1, STORE);
-
-if (addr + 8 > DDC.base + DDC.length || addr + 8 < addr) {
-#if DEBUG
-  printf("CHERI: Trying to load with wrong bounds\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, (1 << 5) | CHERI_SCR_DDC);
-} else if (addr < DDC.base) {
-#if DEBUG
-  printf("CHERI: Trying to load with wrong bounds\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, (1 << 5) | CHERI_SCR_DDC);
-} else {
-#if DEBUG
-  printf("CHERI: loading cap \n");
-#endif
-  cheri_reg_t tmp = CHERI->get_mmu()->load_cheri_reg(paddr);
-  if(CHERI->cheriMem_getTag(addr)) {
-    tmp.tag = 1;
-  } else {
-    tmp.tag = 0;
-  }
-  WRITE_CD(tmp);
-}
+require_rv64;
+WRITE_CD(CHERI->ddc_load_cap(RS1));

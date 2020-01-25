@@ -171,7 +171,11 @@ void processor_t::step(size_t n, insn_t insn)
             rvfi_dii_output.rvfi_dii_rs1_addr = insn.rs1();
             rvfi_dii_output.rvfi_dii_rs2_addr = insn.rs2();
           } else {
+#ifdef ENABLE_CHERI
             fetch = mmu->load_insn(pc);
+#else
+            fetch = mmu->load_insn(pc);
+#endif
           }
 
 

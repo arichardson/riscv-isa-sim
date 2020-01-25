@@ -31,40 +31,4 @@
  * SUCH DAMAGE.
  */
 
-if (!DDC.tag) {
-#if DEBUG
-  printf("CHERI: Trying to store via untagged DDC register\n");
-#endif
-
-  CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, (1 << 5) | CHERI_SCR_DDC);
-} else if (DDC.sealed) {
-#if DEBUG
-  printf("CHERI: Trying to store via a sealed DDC register\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, CHERI_SCR_DDC);
-} else if ((DDC.perms & BIT(CHERI_PERMIT_STORE)) != BIT(CHERI_PERMIT_STORE)) {
-#if DEBUG
-  printf("CHERI: Trying to store with no DDC STORE permissions\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_PERMIT_STORE_FAULT, (1 << 5) | CHERI_SCR_DDC);
-}
-
-reg_t addr = DDC.base + RS1;
-
-if (addr + 2 > DDC.base + DDC.length) {
-#if DEBUG
-  printf("CHERI: Trying to store with wrong bounds\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, (1 << 5) | CHERI_SCR_DDC);
-} else if (addr < DDC.base) {
-#if DEBUG
-  printf("CHERI: Trying to store with wrong bounds\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, (1 << 5) | CHERI_SCR_DDC);
-} else {
-#if DEBUG
-  printf("CHERI: storing mem \n");
-#endif
-  CHERI->cheriMem_clearTag(addr);
-  CHERI->get_mmu()->store_uint16(addr, READ_REG(insn.rd()));
-}
+CHERI->ddc_store_uint16(RS1, RS2);

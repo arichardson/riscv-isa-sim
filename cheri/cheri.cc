@@ -44,62 +44,34 @@
 template<class tag_t, unsigned int N>
 constexpr unsigned int extract_tags_count(const tags_t<tag_t, N>&) { return N; }
 
-void cheri_t::cheriMem_setTag(reg_t addr) {
-
-  reg_t paddr = CHERI->get_mmu()->translate(addr, 1, LOAD);
-
-  paddr -= DRAM_BASE;
-  paddr >>= (int) log2(sizeof(cheri_reg_inmem_t));
-
-#if DEBUG
-  printf("CHERI: Setting %lu tag bit\n", paddr);
-#endif
-
-  if (paddr >= extract_tags_count(mem_tags)) return;
-
-  mem_tags.setTag(paddr, true);
+bool cheri_t::get_tag(reg_t addr) {
+  reg_t paddr = MMU.translate(addr, sizeof(cheri_reg_inmem_t), LOAD);
+  return get_tag_translated(paddr);
 }
 
-bool cheri_t::cheriMem_getTag(reg_t addr) {
-#if DEBUG
-  printf("CHERI: Getting tag bit for addr = %lu\n", addr);
-#endif
-
-  reg_t paddr = CHERI->get_mmu()->translate(addr, 1, LOAD);
-
+bool cheri_t::get_tag_translated(reg_t paddr) {
   paddr -= DRAM_BASE;
   paddr >>= (int) log2(sizeof(cheri_reg_inmem_t));
 
-#if DEBUG
-  printf("CHERI: Getting %lu tag bit\n", paddr);
-#endif
-
   if (paddr >= extract_tags_count(mem_tags)) return false;
-
   return mem_tags.getTag(paddr);
 }
 
-void cheri_t::cheriMem_clearTag(reg_t addr) {
-  reg_t paddr = CHERI->get_mmu()->translate(addr, 1, STORE);
+void cheri_t::set_tag(reg_t addr, bool val) {
+  reg_t paddr = MMU.translate(addr, sizeof(cheri_reg_inmem_t), STORE);
+  set_tag_translated(paddr, val);
+}
 
+void cheri_t::set_tag_translated(reg_t paddr, bool val) {
   paddr -= DRAM_BASE;
   paddr >>= (int) log2(sizeof(cheri_reg_inmem_t));
 
-#if DEBUG
-  printf("CHERI: Clearing %lu tag bit\n", paddr);
-#endif
-
   if (paddr >= extract_tags_count(mem_tags)) return;
-
-  mem_tags.setTag(paddr, false);
-}
-
-mmu_t* cheri_t::get_mmu(void) {
-  return p->get_mmu();
+  mem_tags.setTag(paddr, val);
 }
 
 static inline long unsigned int poweroff(processor_t* p, insn_t y, long unsigned int z) {
-  CHERI->get_mmu()->get_tracer()->printstats();
+  MMU.get_tracer()->printstats();
   exit(0);
 }
 

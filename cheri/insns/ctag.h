@@ -1,3 +1,3 @@
 // See LICENSE_CHERI for license details.
 
-CHERI->cheriMem_setTag(RS1);
+CHERI->set_tag(RS1, true);

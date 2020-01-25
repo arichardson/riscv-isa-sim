@@ -31,39 +31,8 @@
  * SUCH DAMAGE.
  */
 
-if (!CS1.tag) {
-#if DEBUG
-  printf("CHERI: Trying to load via untagged cap register\n");
-#endif
-
-  CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
-} else if (CS1.sealed) {
-#if DEBUG
-  printf("CHERI: Trying to load via a sealed cap register\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
-} else if ((CS1.perms & BIT(CHERI_PERMIT_LOAD)) != BIT(CHERI_PERMIT_LOAD)) {
-#if DEBUG
-  printf("CHERI: Trying to load with no cap LOAD permissions\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_PERMIT_LOAD_FAULT, insn.cs1());
-}
-
-reg_t addr = CS1.base + CS1.offset;
-
-if (addr + 8 > CS1.base + CS1.length) {
-#if DEBUG
-  printf("CHERI: Trying to load with wrong bounds\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
-} else if (addr < CS1.base) {
-#if DEBUG
-  printf("CHERI: Trying to load with wrong bounds\n");
-#endif
-  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
+if (xlen == 32) { /* lc.cap */
+  WRITE_CD(CHERI->cap_load_cap(CS1, insn.cs1(), 0));
 } else {
-#if DEBUG
-  printf("CHERI: loading mem \n");
-#endif
-  WRITE_RD(CHERI->get_mmu()->load_int64(addr));
+  WRITE_RD(CHERI->cap_load_int64(CS1, insn.cs1(), 0));
 }

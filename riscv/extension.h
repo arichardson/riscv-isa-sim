@@ -19,6 +19,8 @@ class extension_t
   virtual ~extension_t();
 
   void set_processor(processor_t* _p) { p = _p; }
+  virtual reg_t pc_to_addr(reg_t pc) { return pc; }
+  virtual void check_ifetch_granule(reg_t start_pc, reg_t pc) {}
  protected:
   processor_t* p;
 

@@ -102,16 +102,15 @@ reg_t reg_from_bytes(size_t len, const uint8_t* bytes)
   abort();
 }
 
-void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes)
+void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes,
+                           reg_t* ppaddr)
 {
   reg_t paddr = translate(addr, len, LOAD);
+  if (ppaddr)
+    *ppaddr = paddr;
 
   if (auto host_addr = sim->addr_to_mem(paddr)) {
     memcpy(bytes, host_addr, len);
-#ifdef ENABLE_CHERI
-    cheri_t *cheri = (static_cast<cheri_t*>(proc->get_extension()));
-    /* TODO: Check DDC */
-#endif /* ENABLE_CHERI */
     if (tracer.interested_in_range(paddr, paddr + PGSIZE, LOAD))
       tracer.trace(paddr, len, LOAD);
     else
@@ -128,9 +127,12 @@ void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes)
   }
 }
 
-void mmu_t::store_slow_path(reg_t addr, reg_t len, const uint8_t* bytes)
+void mmu_t::store_slow_path(reg_t addr, reg_t len, const uint8_t* bytes,
+                            reg_t* ppaddr)
 {
   reg_t paddr = translate(addr, len, STORE);
+  if (ppaddr)
+    *ppaddr = paddr;
 
   if (!matched_trigger) {
     reg_t data = reg_from_bytes(len, bytes);
@@ -141,11 +143,6 @@ void mmu_t::store_slow_path(reg_t addr, reg_t len, const uint8_t* bytes)
 
   if (auto host_addr = sim->addr_to_mem(paddr)) {
     memcpy(host_addr, bytes, len);
-#ifdef ENABLE_CHERI
-    cheri_t *cheri = (static_cast<cheri_t*>(proc->get_extension()));
-    //cheri->cheriMem_clearTag(addr);
-    /* TODO: Check DDC */
-#endif /* ENABLE_CHERI */
     if (tracer.interested_in_range(paddr, paddr + PGSIZE, STORE))
       tracer.trace(paddr, len, STORE);
     else

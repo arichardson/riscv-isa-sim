@@ -20,6 +20,10 @@
 #include <algorithm>
 #include <math.h>
 
+#ifdef ENABLE_CHERI
+#include "cheri.h"
+#endif
+
 DECLARE_TRAP(-1, interactive)
 
 processor_t *sim_t::get_core(const std::string& i)

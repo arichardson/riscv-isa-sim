@@ -7,3 +7,7 @@
 #include "specialize.h"
 #include "tracer.h"
 #include <assert.h>
+
+#ifdef ENABLE_CHERI
+#include "cheri.h"
+#endif

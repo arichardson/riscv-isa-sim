@@ -17,6 +17,10 @@
 #include <stdexcept>
 #include <algorithm>
 
+#ifdef ENABLE_CHERI
+#include "cheri.h"
+#endif
+
 #undef STATE
 #define STATE state
 

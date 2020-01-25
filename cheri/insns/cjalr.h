@@ -41,11 +41,7 @@ else {
   // Link cap
   temp.offset = pc+4;
 
-#ifdef CHERI_MERGED_RF
-  WRITE_CD_MERGED(temp);
-#else /* CHERI_MERGED_RF */
   WRITE_CD(temp);
-#endif /* CHERI_MERGED_RF */
 
 #if DEBUG
   printf("CHERI: cjalr- - linkreg = %lu jumping to %lu\n", temp.offset, PCC.base
