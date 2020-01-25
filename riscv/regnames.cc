@@ -25,11 +25,10 @@ const char* vr_name[] = {
 };
 
 const char *cheri_reg_names[] = {
-  "c0", "c1", "c2", "c3", "c4", "c5", "c6",
-  "c7", "c8", "c9", "c10", "c11", "c12", "c13",
-  "c14", "c15", "c16", "c17", "c18", "c19", "c20",
-  "c21", "c22", "c23", "c24", "c25", "c26", "c27",
-  "c28", "c29", "c30", "c31"
+  "cnull", "cra", "csp",  "cgp",  "ctp", "ct0",  "ct1",  "ct2",
+  "cs0",   "cs1", "ca0",  "ca1",  "ca2", "ca3",  "ca4",  "ca5",
+  "ca6",   "ca7", "cs2",  "cs3",  "cs4", "cs5",  "cs6",  "cs7",
+  "cs8",   "cs9", "cs10", "cs11", "ct3", "ct4",  "ct5",  "ct6"
 };
 
 const char* csr_name(int which) {
