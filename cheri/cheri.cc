@@ -36,10 +36,126 @@
 #include "cheri.h"
 #include "trap.h"
 #include "mmu.h"
+#include "disasm.h"
 #include <cstdlib>
 #include <tgmath.h>
 #include <stdio.h>
 #include <stdarg.h>
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return std::to_string((int)insn.i_imm()) + '(' + xpr_name[insn.rs1()] + ')';
+  }
+} load_address;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return std::to_string((int)insn.s_imm()) + '(' + xpr_name[insn.rs1()] + ')';
+  }
+} store_address;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return std::string("(") + xpr_name[insn.rs1()] + ')';
+  }
+} amo_address;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return std::to_string((int)insn.i_imm()) + '(' + cheri_reg_names[insn.rs1()] + ')';
+  }
+} load_capability;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return std::to_string((int)insn.s_imm()) + '(' + cheri_reg_names[insn.rs1()] + ')';
+  }
+} store_capability;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return std::string("(") + cheri_reg_names[insn.rs1()] + ')';
+  }
+} amo_capability;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return xpr_name[insn.rd()];
+  }
+} xrd;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return xpr_name[insn.rs1()];
+  }
+} xrs1;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return xpr_name[insn.rs2()];
+  }
+} xrs2;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return cheri_reg_names[insn.rd()];
+  }
+} crd;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return cheri_reg_names[insn.rs1()];
+  }
+} crs1;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    if (insn.rs1() == 0) return "ddc";
+    return cheri_reg_names[insn.rs1()];
+  }
+} crs1_ddc;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return cheri_reg_names[insn.rs2()];
+  }
+} crs2;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    if (insn.rs2() == 0) return "ddc";
+    return cheri_reg_names[insn.rs2()];
+  }
+} crs2_ddc;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    switch (insn.chs())
+    {
+      #define DECLARE_CHERI_SCR(name, num) case num: return #name;
+      #include "encoding.h"
+      #undef DECLARE_CHERI_SCR
+      default:
+      {
+        char buf[16];
+        snprintf(buf, sizeof buf, "unknown_%03" PRIx64, insn.chs());
+        return std::string(buf);
+      }
+    }
+  }
+} scr;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return std::to_string((int)insn.i_imm());
+  }
+} imm;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return std::to_string(((unsigned)insn.i_imm()) & 0xFFF);
+  }
+} uimm;
 
 template<class tag_t, unsigned int N>
 constexpr unsigned int extract_tags_count(const tags_t<tag_t, N>&) { return N; }
@@ -95,8 +211,206 @@ std::vector<insn_desc_t> cheri_t::get_instructions() {
   return instructions;
 }
 
-std::vector<disasm_insn_t*> cheri_t::get_disasms() {
+std::vector<disasm_insn_t*> cheri_t::get_disasms(int xlen) {
   std::vector<disasm_insn_t*> insns;
+
+  const uint32_t mask_rd = 0x1fUL << 7;
+  const uint32_t match_rd_ra = 1UL << 7;
+  const uint32_t mask_rs1 = 0x1fUL << 15;
+  const uint32_t match_rs1_ra = 1UL << 15;
+  const uint32_t mask_rs2 = 0x1fUL << 20;
+  const uint32_t mask_imm = 0xfffUL << 20;
+  const uint32_t match_imm_1 = 1UL << 20;
+  const uint32_t mask_rvc_rs2 = 0x1fUL << 2;
+  const uint32_t mask_rvc_imm = mask_rvc_rs2 | 0x1000UL;
+  const uint32_t mask_nf = 0x7Ul << 29;
+
+  #define DECLARE_INSN(code, match, mask) \
+   const uint32_t match_##code = match; \
+   const uint32_t mask_##code = mask;
+  #include "encoding.h"
+  #undef DECLARE_INSN
+
+  #define DISASM_INSN(name, code, match, mask, ...) \
+    insns.push_back(new disasm_insn_t(name, match_##code | (match), \
+                    mask_##code | (mask), __VA_ARGS__));
+  #define DEFINE_INSN(code, ...) \
+    insns.push_back(new disasm_insn_t(#code, match_##code, mask_##code, \
+                    __VA_ARGS__));
+
+  /* Capability-Inspection Instructions */
+  DEFINE_INSN(cgetperm, {&xrd, &crs1})
+  DEFINE_INSN(cgettype, {&xrd, &crs1})
+  DEFINE_INSN(cgetbase, {&xrd, &crs1})
+  DEFINE_INSN(cgetlen, {&xrd, &crs1})
+  DEFINE_INSN(cgettag, {&xrd, &crs1})
+  DEFINE_INSN(cgetsealed, {&xrd, &crs1})
+  DEFINE_INSN(cgetoffset, {&xrd, &crs1})
+  DEFINE_INSN(cgetflags, {&xrd, &crs1})
+  DEFINE_INSN(cgetaddr, {&xrd, &crs1})
+
+  /* Capability-Modification Instructions */
+  DEFINE_INSN(cseal, {&crd, &crs1})
+  DEFINE_INSN(cunseal, {&crd, &crs1})
+
+  DEFINE_INSN(candperm, {&crd, &crs1, &xrs2})
+  DEFINE_INSN(csetflags, {&crd, &crs1, &xrs2})
+  DEFINE_INSN(csetoffset, {&crd, &crs1, &xrs2})
+  DEFINE_INSN(csetaddr, {&crd, &crs1, &xrs2})
+  DEFINE_INSN(cincoffset, {&crd, &crs1, &xrs2})
+  DEFINE_INSN(cincoffsetimmediate, {&crd, &crs1, &imm})
+  DEFINE_INSN(csetbounds, {&crd, &crs1, &xrs2})
+  DEFINE_INSN(csetboundsexact, {&crd, &crs1, &xrs2})
+  DEFINE_INSN(csetboundsimmediate, {&crd, &crs1, &uimm})
+
+  DEFINE_INSN(ccleartag, {&crd, &xrs1})
+
+  DEFINE_INSN(cbuildcap, {&crd, &crs1, &crs2})
+  DEFINE_INSN(ccopytype, {&crd, &crs1, &crs2})
+  DEFINE_INSN(ccseal, {&crd, &crs1, &crs2})
+
+  /* Pointer-Arithmetic Instructions */
+  DEFINE_INSN(ctoptr, {&xrd, &crs1, &crs2_ddc})
+  DEFINE_INSN(cfromptr, {&crd, &crs1_ddc, &xrs2})
+
+  DEFINE_INSN(csub, {&xrd, &crs1, &crs2})
+  DEFINE_INSN(cmove, {&crd, &crs1})
+
+  /* Control-Flow Instructions */
+  DEFINE_INSN(cjalr, {&crd, &crs1})
+  DISASM_INSN("cjr", cjalr, 0, mask_rd, {&crs1})
+  DISASM_INSN("cret", cjalr, match_rs1_ra, mask_rs1, {&crs1})
+  DEFINE_INSN(ccall, {&crs1, &crs2})
+
+  /* Assertion Instructions */
+  DEFINE_INSN(ctestsubset, {&xrd, &crs1, &crs2})
+
+  /* Special Capability Register Access Instructions */
+  DEFINE_INSN(cspecialrw, {&crd, &scr, &crs1})
+  DISASM_INSN("cspecialr", cspecialrw, 0, mask_rs1, {&crd, &scr})
+  DISASM_INSN("cspecialw", cspecialrw, 0, mask_rd, {&scr, &crs1})
+
+  /* Fast Register-Clearing Instructions */
+  /* TODO: Define in riscv-opcodes */
+
+  /* Adjusting to Compressed Capability Precision Instructions */
+  DEFINE_INSN(croundrepresentablelength, {&xrd, &xrs1})
+  DEFINE_INSN(crepresentablealignmentmask, {&xrd, &xrs1})
+
+  /* Memory Loads with Explicit Address Type Instructions */
+  DEFINE_INSN(lb_ddc, {&xrd, &amo_address})
+  DEFINE_INSN(lh_ddc, {&xrd, &amo_address})
+  DEFINE_INSN(lw_ddc, {&xrd, &amo_address})
+  if (xlen == 32) {
+    DISASM_INSN("lc.ddc", ld_ddc, 0, 0, {&crd, &amo_address})
+  } else {
+    DEFINE_INSN(ld_ddc, {&xrd, &amo_address})
+    DISASM_INSN("lc.ddc", lq_ddc, 0, 0, {&crd, &amo_address})
+  }
+  DEFINE_INSN(lbu_ddc, {&xrd, &amo_address})
+  DEFINE_INSN(lhu_ddc, {&xrd, &amo_address})
+  if (xlen == 64) {
+    DEFINE_INSN(lwu_ddc, {&xrd, &amo_address})
+    DEFINE_INSN(ldu_ddc, {&xrd, &amo_address})
+  }
+
+  DEFINE_INSN(lb_cap, {&xrd, &amo_capability})
+  DEFINE_INSN(lh_cap, {&xrd, &amo_capability})
+  DEFINE_INSN(lw_cap, {&xrd, &amo_capability})
+  if (xlen == 32) {
+    DISASM_INSN("lc.cap", ld_cap, 0, 0, {&crd, &amo_capability})
+  } else {
+    DEFINE_INSN(ld_cap, {&xrd, &amo_capability})
+    DISASM_INSN("lc.cap", lq_cap, 0, 0, {&crd, &amo_capability})
+  }
+  DEFINE_INSN(lbu_cap, {&xrd, &amo_capability})
+  DEFINE_INSN(lhu_cap, {&xrd, &amo_capability})
+  if (xlen == 64) {
+    DEFINE_INSN(lwu_cap, {&xrd, &amo_capability})
+    DEFINE_INSN(ldu_cap, {&xrd, &amo_capability})
+  }
+
+  DEFINE_INSN(lr_b_ddc, {&xrd, &amo_address})
+  DEFINE_INSN(lr_h_ddc, {&xrd, &amo_address})
+  DEFINE_INSN(lr_w_ddc, {&xrd, &amo_address})
+  if (xlen == 32) {
+    DISASM_INSN("lr.c.ddc", lr_d_ddc, 0, 0, {&crd, &amo_address})
+  } else {
+    DEFINE_INSN(lr_d_ddc, {&xrd, &amo_address})
+    DISASM_INSN("lr.c.ddc", lr_q_ddc, 0, 0, {&crd, &amo_address})
+  }
+
+  DEFINE_INSN(lr_b_cap, {&xrd, &amo_capability})
+  DEFINE_INSN(lr_h_cap, {&xrd, &amo_capability})
+  DEFINE_INSN(lr_w_cap, {&xrd, &amo_capability})
+  if (xlen == 32) {
+    DISASM_INSN("lr.c.cap", lr_d_ddc, 0, 0, {&crd, &amo_capability})
+  } else {
+    DEFINE_INSN(lr_d_cap, {&xrd, &amo_capability})
+    DISASM_INSN("lr.c.cap", lr_q_ddc, 0, 0, {&crd, &amo_capability})
+  }
+
+  /* Memory Stores with Explicit Address Type Instructions */
+  DEFINE_INSN(sb_ddc, {&xrd, &amo_address})
+  DEFINE_INSN(sh_ddc, {&xrd, &amo_address})
+  DEFINE_INSN(sw_ddc, {&xrd, &amo_address})
+  if (xlen == 32) {
+    DISASM_INSN("sc.ddc", sd_ddc, 0, 0, {&crs2, &amo_address})
+  } else {
+    DEFINE_INSN(sd_ddc, {&xrd, &amo_address})
+    DISASM_INSN("sc.ddc", sq_ddc, 0, 0, {&crs2, &amo_address})
+  }
+
+  DEFINE_INSN(sb_cap, {&xrd, &amo_capability})
+  DEFINE_INSN(sh_cap, {&xrd, &amo_capability})
+  DEFINE_INSN(sw_cap, {&xrd, &amo_capability})
+  if (xlen == 32) {
+    DISASM_INSN("sc.cap", sd_cap, 0, 0, {&crs2, &amo_capability})
+  } else {
+    DEFINE_INSN(sd_cap, {&xrd, &amo_capability})
+    DISASM_INSN("sc.cap", sq_cap, 0, 0, {&crs2, &amo_capability})
+  }
+
+  DEFINE_INSN(sc_b_ddc, {&xrd, &amo_address})
+  DEFINE_INSN(sc_h_ddc, {&xrd, &amo_address})
+  DEFINE_INSN(sc_w_ddc, {&xrd, &amo_address})
+  if (xlen == 32) {
+    DISASM_INSN("sc.c.ddc", sc_d_ddc, 0, 0, {&crs2, &amo_address})
+  } else {
+    DEFINE_INSN(sc_d_ddc, {&xrd, &amo_address})
+    DISASM_INSN("sc.c.ddc", sc_q_ddc, 0, 0, {&crs2, &amo_address})
+  }
+
+  DEFINE_INSN(sc_b_cap, {&xrd, &amo_capability})
+  DEFINE_INSN(sc_h_cap, {&xrd, &amo_capability})
+  DEFINE_INSN(sc_w_cap, {&xrd, &amo_capability})
+  if (xlen == 32) {
+    DISASM_INSN("sc.c.cap", sc_d_ddc, 0, 0, {&crs2, &amo_capability})
+  } else {
+    DEFINE_INSN(sc_d_cap, {&xrd, &amo_capability})
+    DISASM_INSN("sc.c.cap", sc_q_ddc, 0, 0, {&crs2, &amo_capability})
+  }
+
+  /* Memory-Access Instructions */
+  if (xlen == 32) {
+    DISASM_INSN("lc", ld, 0, 0, {&crd, &store_capability})
+    DISASM_INSN("sc", sd, 0, 0, {&crs2, &store_capability})
+  } else {
+    DISASM_INSN("lc", lq, 0, 0, {&crd, &store_capability})
+    DISASM_INSN("sc", sq, 0, 0, {&crs2, &store_capability})
+  }
+
+  /* Atomic Memory-Access Instructions */
+  if (xlen == 32) {
+    DISASM_INSN("lr.c", lr_d, 0, 0, {&crd, &amo_capability})
+    DISASM_INSN("sc.c", sc_d, 0, 0, {&xrd, &crs2, &amo_capability})
+    DISASM_INSN("amoswap.c", sc_d, 0, 0, {&crd, &crs2, &amo_capability})
+  } else {
+    DISASM_INSN("lr.c", lr_q, 0, 0, {&crd, &amo_capability})
+    DISASM_INSN("sc.c", sc_q, 0, 0, {&xrd, &crs2, &amo_capability})
+    DISASM_INSN("amoswap.c", sc_q, 0, 0, {&crd, &crs2, &amo_capability})
+  }
+
   return insns;
 }
 

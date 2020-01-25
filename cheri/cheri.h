@@ -172,7 +172,7 @@ class cheri_t : public extension_t {
   };
 
   std::vector<insn_desc_t> get_instructions();
-  std::vector<disasm_insn_t*> get_disasms();
+  std::vector<disasm_insn_t*> get_disasms(int xlen);
 
   cheri_state_t state;
 

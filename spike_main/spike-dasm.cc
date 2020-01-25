@@ -41,8 +41,8 @@ int main(int argc, char** argv)
 
   disassembler_t* disassembler = new disassembler_t(xlen);
   if (extension) {
-    for (auto disasm_insn : extension()->get_disasms()) {
-      disassembler->add_insn(disasm_insn);
+    for (auto disasm_insn : extension()->get_disasms(xlen)) {
+      disassembler->add_ext_insn(disasm_insn);
     }
   }
 

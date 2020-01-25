@@ -40,8 +40,8 @@ processor_t::processor_t(const char* isa, const char* priv, const char* varch,
 
   disassembler = new disassembler_t(max_xlen);
   if (ext)
-    for (auto disasm_insn : ext->get_disasms())
-      disassembler->add_insn(disasm_insn);
+    for (auto disasm_insn : ext->get_disasms(max_xlen))
+      disassembler->add_ext_insn(disasm_insn);
 
   reset();
 }
@@ -1103,8 +1103,8 @@ void processor_t::register_extension(extension_t* x)
   for (auto insn : x->get_instructions())
     register_insn(insn);
   build_opcode_map();
-  for (auto disasm_insn : x->get_disasms())
-    disassembler->add_insn(disasm_insn);
+  for (auto disasm_insn : x->get_disasms(max_xlen))
+    disassembler->add_ext_insn(disasm_insn);
   if (ext != NULL)
     throw std::logic_error("only one extension may be registered");
   ext = x;

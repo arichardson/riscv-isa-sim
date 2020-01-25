@@ -6,6 +6,7 @@
 #include <cstdarg>
 #include <sstream>
 #include <stdlib.h>
+#include <algorithm>
 
 struct : public arg_t {
   std::string to_string(insn_t insn) const {
@@ -1155,7 +1156,31 @@ disassembler_t::disassembler_t(int xlen)
 
 const disasm_insn_t* disassembler_t::lookup(insn_t insn) const
 {
+  if (dirty) {
+    struct cmp {
+      bool operator()(const disasm_insn_t *lhs, const disasm_insn_t *rhs) {
+        return __builtin_popcount(lhs->get_mask()) >
+               __builtin_popcount(rhs->get_mask());
+      }
+    };
+    for (size_t i = 0; i < HASH_SIZE+1; i++)
+      std::sort(ext_chain[i].begin(), ext_chain[i].end(), cmp());
+    for (size_t i = 0; i < HASH_SIZE+1; i++)
+      std::sort(chain[i].begin(), chain[i].end(), cmp());
+    dirty = false;
+  }
+
   size_t idx = insn.bits() % HASH_SIZE;
+  for (size_t j = 0; j < ext_chain[idx].size(); j++)
+    if(*ext_chain[idx][j] == insn)
+      return ext_chain[idx][j];
+
+  idx = HASH_SIZE;
+  for (size_t j = 0; j < ext_chain[idx].size(); j++)
+    if(*ext_chain[idx][j] == insn)
+      return ext_chain[idx][j];
+
+  idx = insn.bits() % HASH_SIZE;
   for (size_t j = 0; j < chain[idx].size(); j++)
     if(*chain[idx][j] == insn)
       return chain[idx][j];
@@ -1174,6 +1199,16 @@ void NOINLINE disassembler_t::add_insn(disasm_insn_t* insn)
   if (insn->get_mask() % HASH_SIZE == HASH_SIZE - 1)
     idx = insn->get_match() % HASH_SIZE;
   chain[idx].push_back(insn);
+  dirty = true;
+}
+
+void NOINLINE disassembler_t::add_ext_insn(disasm_insn_t* insn)
+{
+  size_t idx = HASH_SIZE;
+  if (insn->get_mask() % HASH_SIZE == HASH_SIZE - 1)
+    idx = insn->get_match() % HASH_SIZE;
+  ext_chain[idx].push_back(insn);
+  dirty = true;
 }
 
 disassembler_t::~disassembler_t()
@@ -1181,4 +1216,7 @@ disassembler_t::~disassembler_t()
   for (size_t i = 0; i < HASH_SIZE+1; i++)
     for (size_t j = 0; j < chain[i].size(); j++)
       delete chain[i][j];
+  for (size_t i = 0; i < HASH_SIZE+1; i++)
+    for (size_t j = 0; j < ext_chain[i].size(); j++)
+      delete ext_chain[i][j];
 }
