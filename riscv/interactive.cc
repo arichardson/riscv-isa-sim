@@ -237,7 +237,7 @@ cheri_reg_t sim_t::get_creg(const std::vector<std::string>& args)
   processor_t *p = get_core(args[0]);
   cheri_t *cheri = (static_cast<cheri_t*>(p->get_extension()));
 
-  unsigned long r = std::find(xpr_name, xpr_name + NXPR, args[1]) - xpr_name;
+  unsigned long r = std::find(cheri_reg_names, cheri_reg_names + NXPR, args[1]) - cheri_reg_names;
 
   if (r >= NXPR)
     throw trap_interactive();
@@ -487,7 +487,7 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
   } else {
 
       cheri_reg_t creg = get_creg(args);
-      unsigned long r = std::find(xpr_name, xpr_name + NXPR, args[1]) - xpr_name;
+      unsigned long r = std::find(cheri_reg_names, cheri_reg_names + NXPR, args[1]) - cheri_reg_names;
 
       fprintf(stderr, "%-4s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 "%016" PRIx64 " | offset: 0x%016" PRIx64
       " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016"
