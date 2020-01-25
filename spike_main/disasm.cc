@@ -1164,9 +1164,9 @@ const disasm_insn_t* disassembler_t::lookup(insn_t insn) const
       }
     };
     for (size_t i = 0; i < HASH_SIZE+1; i++)
-      std::sort(ext_chain[i].begin(), ext_chain[i].end(), cmp());
+      std::stable_sort(ext_chain[i].begin(), ext_chain[i].end(), cmp());
     for (size_t i = 0; i < HASH_SIZE+1; i++)
-      std::sort(chain[i].begin(), chain[i].end(), cmp());
+      std::stable_sort(chain[i].begin(), chain[i].end(), cmp());
     dirty = false;
   }
 
