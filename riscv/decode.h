@@ -163,13 +163,13 @@ private:
   T data[N];
 };
 
-template <>
-class regfile_t <cheri_reg_t, 32, true>
+template <size_t N, bool zero_reg>
+class regfile_t <cheri_reg_t, N, zero_reg>
 {
 public:
   void write(size_t i, reg_t value)
   {
-    if (i != 0)
+    if (!zero_reg || i != 0)
     {
       data[i] = CHERI_NULL_CAP;
       data[i].offset = value;
@@ -177,7 +177,7 @@ public:
   }
   void write(size_t i, cheri_reg_t value)
   {
-    if (i != 0)
+    if (!zero_reg || i != 0)
       data[i] = value;
   }
   void reset()
@@ -188,7 +188,9 @@ public:
 #else
     cheri_reg_t init_reg = CHERI_NULL_CAP;
 #endif
-    for (int i = 1; i < 32; ++i) {
+    if (zero_reg)
+      data[0] = CHERI_NULL_CAP;
+    for (size_t i = (size_t)zero_reg; i < N; ++i) {
       data[i] = init_reg;
     }
   }
@@ -197,7 +199,7 @@ public:
     return data[i];
   }
 private:
-  cheri_reg_t data[32];
+  cheri_reg_t data[N];
 };
 
 // helpful macros, etc

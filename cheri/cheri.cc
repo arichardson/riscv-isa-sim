@@ -419,52 +419,37 @@ void cheri_t::reset() {
 #ifdef DEBUG
   fprintf(stderr, "cheri.cc: resetting cheri regs.\n");
 #endif //DEBUG
-  memset(&state.reg_file, 0, sizeof(state.reg_file));
-  memset(&state.scrs_reg_file, 0, sizeof(state.scrs_reg_file));
 
   mem_tags.reset();
 
   ccsr = 0;
 
-  cheri_reg_t resetValue;
-#ifdef RISCV_ENABLE_RVFI_DII
-  resetValue = CHERI_ALMIGHTY_CAP;
-#else //RISCV_ENABLE_RVFI_DII
-  resetValue = CHERI_NULL_CAP;
-#endif //RISCV_ENABLE_RVFI_DII
-
-  /* Reset all CHERI GPRs */
-  for (int i = 0; i < NUM_CHERI_REGS; i++) {
-    state.reg_file[i] = resetValue;
-  }
-  state.reg_file[0] = CHERI_NULL_CAP; //The zero should be hard-coded to the null cap.
-
-  /* Rest all CHERI SCRs */
-  for (int i = 0; i < NUM_CHERI_SCR_REGS; i++) {
-    state.scrs_reg_file[i] = resetValue;
-  }
+#ifndef CHERI_MERGED_RF
+  state.reg_file.reset();
+#endif
+  state.scrs_reg_file.reset();
 
   //Taken from Table 5.2 from the cheri architecture spec.
   /* Initialize pcc and ddc */
   /* FIXME: Need to decide what permissions to be set for PCC (i.e. no store) */
-  state.scrs_reg_file[CHERI_SCR_PCC] = CHERI_ALMIGHTY_CAP;
-  /* FIXME: Need to decide what permissions to be set for DDC (i.e. no execute) */
-  state.scrs_reg_file[CHERI_SCR_DDC] = CHERI_ALMIGHTY_CAP;
+  state.scrs_reg_file.write(CHERI_SCR_PCC, CHERI_ALMIGHTY_CAP);
+  /* FIXME: Need to decide what permissions to be set for DDC (i.e. no execute); */
+  state.scrs_reg_file.write(CHERI_SCR_DDC, CHERI_ALMIGHTY_CAP);
 
-  state.scrs_reg_file[CHERI_SCR_UTCC] = CHERI_ALMIGHTY_CAP;
-  state.scrs_reg_file[CHERI_SCR_UTDC] = CHERI_NULL_CAP;
-  state.scrs_reg_file[CHERI_SCR_USCRATCHC] = CHERI_NULL_CAP;
-  state.scrs_reg_file[CHERI_SCR_UEPCC] = CHERI_ALMIGHTY_CAP;
+  state.scrs_reg_file.write(CHERI_SCR_UTCC, CHERI_ALMIGHTY_CAP);
+  state.scrs_reg_file.write(CHERI_SCR_UTDC, CHERI_NULL_CAP);
+  state.scrs_reg_file.write(CHERI_SCR_USCRATCHC, CHERI_NULL_CAP);
+  state.scrs_reg_file.write(CHERI_SCR_UEPCC, CHERI_ALMIGHTY_CAP);
 
-  state.scrs_reg_file[CHERI_SCR_STCC] = CHERI_ALMIGHTY_CAP;
-  state.scrs_reg_file[CHERI_SCR_STDC] = CHERI_NULL_CAP;
-  state.scrs_reg_file[CHERI_SCR_SSCRATCHC] = CHERI_NULL_CAP;
-  state.scrs_reg_file[CHERI_SCR_SEPCC] = CHERI_ALMIGHTY_CAP;
+  state.scrs_reg_file.write(CHERI_SCR_STCC, CHERI_ALMIGHTY_CAP);
+  state.scrs_reg_file.write(CHERI_SCR_STDC, CHERI_NULL_CAP);
+  state.scrs_reg_file.write(CHERI_SCR_SSCRATCHC, CHERI_NULL_CAP);
+  state.scrs_reg_file.write(CHERI_SCR_SEPCC, CHERI_ALMIGHTY_CAP);
 
-  state.scrs_reg_file[CHERI_SCR_MTCC] = CHERI_ALMIGHTY_CAP;
-  state.scrs_reg_file[CHERI_SCR_MTDC] = CHERI_NULL_CAP;
-  state.scrs_reg_file[CHERI_SCR_MSCRATCHC] = CHERI_NULL_CAP;
-  state.scrs_reg_file[CHERI_SCR_MEPCC] = CHERI_ALMIGHTY_CAP;
+  state.scrs_reg_file.write(CHERI_SCR_MTCC, CHERI_ALMIGHTY_CAP);
+  state.scrs_reg_file.write(CHERI_SCR_MTDC, CHERI_NULL_CAP);
+  state.scrs_reg_file.write(CHERI_SCR_MSCRATCHC, CHERI_NULL_CAP);
+  state.scrs_reg_file.write(CHERI_SCR_MEPCC, CHERI_ALMIGHTY_CAP);
 
   /* Set cap size to 2*xlen; i.e., 128 cap size for RV64 and 64 for RV32 */
 #ifdef ENABLE_CHERI128
@@ -475,7 +460,7 @@ void cheri_t::reset() {
 };
 
 void cheri_t::set_scr(int index, cheri_reg_t val, processor_t* proc) {
-  state.scrs_reg_file[index] = val;
+  state.scrs_reg_file.write(index, val);
   switch(index) {
     case CHERI_SCR_PCC:
       proc->state.pc = val.offset;

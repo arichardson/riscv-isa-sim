@@ -221,11 +221,7 @@ reg_t sim_t::get_reg(const std::vector<std::string>& args)
   if (r >= NXPR)
     throw trap_interactive();
 
-#ifdef CHERI_MERGED_RF
-  return p->get_state()->XPR[r].offset;
-#else //CHERI_MERGED_RF
-  return p->get_state()->XPR[r];
-#endif //CHERI_MERGED_RF
+  return READ_REG(r);
 }
 
 #ifdef ENABLE_CHERI
@@ -252,11 +248,7 @@ cheri_reg_t sim_t::get_creg(const std::vector<std::string>& args)
   if (r >= NXPR)
     throw trap_interactive();
 
-#ifdef CHERI_MERGED_RF
-  return p->get_state()->XPR[r];
-#else //CHERI_MERGED_RF
-  return CHERI_STATE.reg_file[r];
-#endif //CHERI_MERGED_RF
+  return READ_CREG(r);
 }
 #endif //ENABLE_CHERI
 
@@ -387,11 +379,7 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
     processor_t *p = get_core(args[0]);
 
     for (int r = 0; r < NUM_CHERI_REGS; ++r) {
-#ifdef CHERI_MERGED_RF
-      creg = p->get_state()->XPR[r];
-#else //CHERI_MERGED_RF
-      creg = CHERI_STATE.reg_file[r];
-#endif //CHERI_MERGED_RF
+      creg = READ_CREG(r);
 
       print_creg(creg, cheri_reg_names[r]);
     }

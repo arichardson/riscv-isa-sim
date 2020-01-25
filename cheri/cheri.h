@@ -75,12 +75,16 @@
     fprintf(stderr, "x%lu <- t:%u s:%u perms:0x%08x type:0x%016x offset:0x%016lx base:0x%016lx length:0x%1lx %016lx\n", insn.cd(), wdata.tag, wdata.sealed, wdata.perms, wdata.otype, wdata.offset, wdata.base, (uint64_t) (wdata.length >> 64), (uint64_t) wdata.length & UINT64_MAX); \
   } \
 })
+# define READ_CREG(reg) STATE.XPR[reg]
+# define WRITE_CREG(reg, val) STATE.XPR.write(reg, val)
 #else/* CHERI_MERGED_RF */
 # define CD  CHERI_STATE.reg_file[insn.cd()]
 # define CS1 CHERI_STATE.reg_file[insn.cs1()]
 # define CS2 CHERI_STATE.reg_file[insn.cs2()]
 
-# define WRITE_CD(val) CHERI_STATE.reg_file[insn.cd()] =  val
+# define WRITE_CD(val) CHERI_STATE.reg_file.write(insn.cd(), val)
+# define READ_CREG(reg) CHERI_STATE.reg_file[reg]
+# define WRITE_CREG(reg, val) CHERI_STATE.reg_file.write(reg, val)
 #endif /* CHERI_MERGED_RF */
 
 #ifdef ENABLE_CHERI128
@@ -100,9 +104,11 @@ extern const char *cheri_reg_names[32];
  */
 
 struct cheri_state {
-  cheri_reg_t reg_file[NUM_CHERI_REGS];
+#ifndef CHERI_MERGED_RF
+  regfile_t<cheri_reg_t, NUM_CHERI_REGS, true> reg_file;
+#endif
 
-  cheri_reg_t scrs_reg_file[NUM_CHERI_SCR_REGS];
+  regfile_t<cheri_reg_t, NUM_CHERI_SCR_REGS, false> scrs_reg_file;
 };
 
 typedef struct cheri_state cheri_state_t;
@@ -127,9 +133,14 @@ class cheri_t : public extension_t {
 
   void register_insn(insn_desc_t desc);
 
-  reg_t pc_to_addr(reg_t pc) {
+  reg_t from_arch_pc(reg_t pc) {
     cheri_reg_t pcc = state.scrs_reg_file[CHERI_SCR_PCC];
-    return pcc.base + pc;
+    return pc + pcc.base;
+  }
+
+  reg_t to_arch_pc(reg_t pc) {
+    cheri_reg_t pcc = state.scrs_reg_file[CHERI_SCR_PCC];
+    return pc - pcc.base;
   }
 
   void check_ifetch_granule(reg_t start_addr, reg_t addr) {

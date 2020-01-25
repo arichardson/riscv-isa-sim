@@ -507,15 +507,21 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     reg_t vector = (state.stvec & 1) && interrupt ? 4*bit : 0;
     state.pc = (state.stvec & ~(reg_t)1) + vector;
     if (rvfi_dii) {
-      rvfi_dii_output.rvfi_dii_pc_wdata = state.pc;
+      rvfi_dii_output.rvfi_dii_pc_wdata = state.pc; /* architectural! */
+    }
+    if (auto *ext = get_extension()) {
+      state.pc = ext->from_arch_pc(state.pc);
+      epc = ext->to_arch_pc(epc);
     }
     state.scause = t.cause();
 #ifdef ENABLE_CHERI
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
     state.sccsr = cheri->get_ccsr();
-    cheri->state.scrs_reg_file[CHERI_SCR_SEPCC] = cheri->get_scr(CHERI_SCR_PCC, this);
-    cheri->state.scrs_reg_file[CHERI_SCR_SEPCC].offset = epc - cheri->get_scr(CHERI_SCR_PCC, this).base;
-    cheri->state.scrs_reg_file[CHERI_SCR_PCC] = cheri->get_scr(CHERI_SCR_STCC, this);
+    epc = cheri->to_arch_pc(epc);
+    cheri_reg_t sepcc = cheri->state.scrs_reg_file[CHERI_SCR_SEPCC];
+    sepcc.offset = epc;
+    cheri->state.scrs_reg_file.write(CHERI_SCR_SEPCC, sepcc);
+    cheri->state.scrs_reg_file.write(CHERI_SCR_PCC, cheri->get_scr(CHERI_SCR_STCC, this));
 #if DEBUG
     fprintf(stderr, "processor.cc: supervisor mode trap, PC is 0x%016lx\n", state.pc);
 #endif //DEBUG
@@ -533,20 +539,26 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     reg_t vector = (state.mtvec & 1) && interrupt ? 4*bit : 0;
     state.pc = (state.mtvec & ~(reg_t)1) + vector;
     if (rvfi_dii) {
-      rvfi_dii_output.rvfi_dii_pc_wdata = state.pc;
+      rvfi_dii_output.rvfi_dii_pc_wdata = state.pc; /* arechitectural! */
     }
-    state.mepc = epc;
+    if (auto *ext = get_extension()) {
+      state.pc = ext->from_arch_pc(state.pc);
+      epc = ext->to_arch_pc(epc);
+    }
     state.mcause = t.cause();
 #ifdef ENABLE_CHERI
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
     state.mccsr = cheri->get_ccsr();
-    cheri->state.scrs_reg_file[CHERI_SCR_MEPCC] = cheri->get_scr(CHERI_SCR_PCC, this);
-    cheri->state.scrs_reg_file[CHERI_SCR_MEPCC].offset = epc - cheri->get_scr(CHERI_SCR_PCC, this).base;
-    cheri->state.scrs_reg_file[CHERI_SCR_PCC] = cheri->get_scr(CHERI_SCR_MTCC, this);
+    epc = cheri->to_arch_pc(epc);
+    cheri_reg_t mepcc = cheri->state.scrs_reg_file[CHERI_SCR_MEPCC];
+    mepcc.offset = epc;
+    cheri->state.scrs_reg_file.write(CHERI_SCR_MEPCC, mepcc);
+    cheri->state.scrs_reg_file.write(CHERI_SCR_PCC, cheri->get_scr(CHERI_SCR_MTCC, this));
 #if DEBUG
     fprintf(stderr, "processor.cc: machine mode trap, PC is 0x%016lx\n", state.pc);
 #endif //DEBUG
 #endif /* ENABLE_CHERI */
+    state.mepc = epc;
     state.mtval = t.get_tval();
 
     reg_t s = state.mstatus;

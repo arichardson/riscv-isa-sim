@@ -366,10 +366,9 @@ public:
     return entry;
   }
 
-  inline insn_bits_t get_insn(reg_t pc)
+  inline insn_bits_t get_insn(reg_t addr)
   {
     auto *ext = proc->get_extension();
-    reg_t addr = ext ? ext->pc_to_addr(pc) : pc;
     if (ext) ext->check_ifetch_granule(addr, addr);
 
     auto tlb_entry = translate_insn_addr(addr);
@@ -399,14 +398,11 @@ public:
     return insn;
   }
 
-  inline icache_entry_t* access_icache(reg_t pc)
+  inline icache_entry_t* access_icache(reg_t addr)
   {
-    auto *ext = proc->get_extension();
-    reg_t addr = ext ? ext->pc_to_addr(pc) : pc;
-
     icache_entry_t* entry = &icache[icache_index(addr)];
     if (likely(entry->tag == addr)) {
-      if (ext) {
+      if (auto *ext = proc->get_extension()) {
         ext->check_ifetch_granule(addr, addr);
         for (int i = 2; i < entry->data.insn.length(); i += 2)
           ext->check_ifetch_granule(addr, addr + i);
@@ -416,10 +412,8 @@ public:
     return refill_icache(addr, entry);
   }
 
-  inline insn_fetch_t load_insn(reg_t pc)
+  inline insn_fetch_t load_insn(reg_t addr)
   {
-    auto *ext = proc->get_extension();
-    reg_t addr = ext ? ext->pc_to_addr(pc) : pc;
     icache_entry_t entry;
     return refill_icache(addr, &entry)->data;
   }

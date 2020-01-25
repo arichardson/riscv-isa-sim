@@ -27,5 +27,5 @@ else {
   cheri_reg_t CS1_tmp = CS1;
   CS1_tmp.sealed = false;
   CS1_tmp.otype = -1;
-  CHERI_STATE.reg_file[31] = CS1_tmp; //TODO define IDC=31 elsewhere
+  WRITE_CREG(31, CS1_tmp); //TODO define IDC=31 elsewhere
 }
