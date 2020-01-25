@@ -214,7 +214,7 @@ $(2)_reverse_deps   := $$(call reverse_list,$$($(2)_subproject_deps))
 $(2)_lib_libs       := $$($(2)_reverse_deps)
 $(2)_lib_libnames   := $$(patsubst %, lib%.a, $$($(2)_lib_libs))
 $(2)_lib_libarg     := $$(patsubst %, -l%, $$($(2)_lib_libs))
-$(2)_lib_libnames_shared	:= $$(if $$($(2)_install_shared_lib),lib$(1).so,)
+$(2)_lib_libnames_shared	:= $$(patsubst %, lib%.so, $$($(2)_lib_libs))
 
 lib$(1).a : $$($(2)_objs) $$($(2)_c_objs) $$($(2)_lib_libnames)
 	$(AR) rcs $$@ $$^
