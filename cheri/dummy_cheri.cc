@@ -54,32 +54,32 @@ REGISTER_EXTENSION(cheri, []() {
 })
 
 void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source) {
-  destination->cr_offset        = source->offset;
+  destination->_cr_cursor       = source->cursor;
   destination->cr_base          = source->base;
   destination->_cr_top          = ((cheri_length_t) source->base) + source->length;
   destination->cr_perms         = source->perms;
   destination->cr_uperms        = source->uperms;
   destination->cr_otype         = source->otype;
+  destination->cr_flags         = source->flags;
   destination->cr_tag           = source->tag;
-  destination->_sbit_for_memory = source->sealed;
 }
 
 void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source) {
-  destination->offset = source->cr_offset;
+  destination->cursor = source->_cr_cursor;
   destination->base   = source->cr_base;
   destination->length = source->length();
   destination->perms  = source->cr_perms;
   destination->uperms = source->cr_uperms;
   destination->otype  = source->cr_otype;
+  destination->flags  = source->cr_flags;
   destination->tag    = source->cr_tag;
-  destination->sealed = source->_sbit_for_memory;
 }
 
-bool cheri_is_representable(uint32_t sealed, uint64_t base, cheri_length_t length, uint64_t offset) {
+bool cheri_is_representable(uint32_t sealed, uint64_t base, cheri_length_t length, uint64_t old_cursor, uint64_t new_cursor) {
 #if DEBUG
   fprintf(stderr, "dummy_cheri.cc: Checking representability s:%u base:0x%016lx length:0x%1lx %016lx offset: 0x%016lx\n", sealed, base, (uint64_t)(length >> 64), (uint64_t)(length & UINT64_MAX), offset);
 #endif //DEBUG
-  return cc128_is_representable(sealed, base, length, offset, offset);
+  return cc128_is_representable_new_addr(sealed, base, length, old_cursor, new_cursor);
 }
 
 #endif /*ENABLE_CHERI*/

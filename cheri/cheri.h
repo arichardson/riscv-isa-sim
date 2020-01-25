@@ -68,11 +68,11 @@
   cheri_reg_t wdata = (val); /* val may have side effects */ \
   STATE.XPR.write(insn.cd(), wdata); \
   if (p->rvfi_dii && (insn.cd() != 0)) { \
-    p->rvfi_dii_output.rvfi_dii_rd_wdata = wdata.base + wdata.offset; \
+    p->rvfi_dii_output.rvfi_dii_rd_wdata = wdata.cursor; \
     p->rvfi_dii_output.rvfi_dii_rd_addr = insn.cd(); \
   } \
   if(DEBUG) { \
-    fprintf(stderr, "x%lu <- t:%u s:%u perms:0x%08x type:0x%016x offset:0x%016lx base:0x%016lx length:0x%1lx %016lx\n", insn.cd(), wdata.tag, wdata.sealed, wdata.perms, wdata.otype, wdata.offset, wdata.base, (uint64_t) (wdata.length >> 64), (uint64_t) wdata.length & UINT64_MAX); \
+    fprintf(stderr, "x%lu <- t:%u s:%u perms:0x%08x type:0x%016x cursor:0x%016lx base:0x%016lx length:0x%1lx%016lx\n", insn.cd(), wdata.tag, wdata.sealed(), wdata.perms, wdata.otype, wdata.cursor, wdata.base, (uint64_t) (wdata.length >> 64), (uint64_t) wdata.length & UINT64_MAX); \
   } \
 })
 # define READ_CREG(reg) STATE.XPR[reg]
@@ -95,14 +95,6 @@
 
 extern const char *cheri_reg_names[32];
 
-/* 256-bit Caps register format *
- * -------------------------------------------------------------------------
- * | length | base | offset | uperms | perms | S | reserved | otype | Tag  |
- * -------------------------------------------------------------------------
- * |  64    |  64  |   64   |   16   |  15   | 1 |   7     |   24   |  1   |
- * -------------------------------------------------------------------------
- */
-
 struct cheri_state {
 #ifndef CHERI_MERGED_RF
   regfile_t<cheri_reg_t, NUM_CHERI_REGS, true> reg_file;
@@ -117,7 +109,7 @@ void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source);
 
 void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source);
 
-bool cheri_is_representable(uint32_t sealed, uint64_t base, cheri_length_t length, uint64_t offset);
+bool cheri_is_representable(uint32_t sealed, uint64_t base, cheri_length_t length, uint64_t old_cursor, uint64_t new_cursor);
 
 class cheri_t : public extension_t {
  public:
@@ -148,7 +140,7 @@ class cheri_t : public extension_t {
     reg_t authidx = 0x20 | CHERI_SCR_PCC;
     /* We can skip everything but bounds for granules other than the first. */
     if (start_addr == addr) {
-      reg_t offset = addr - auth.base - auth.offset;
+      reg_t offset = addr - auth.cursor;
       memop_to_addr(auth, authidx, offset, 2, /*load=*/false, /*store=*/false,
                     /*execute=*/true, /*cap_op=*/false, /*store_local=*/false);
     } else {
@@ -214,10 +206,10 @@ class cheri_t : public extension_t {
     // Check that we never execute capabilities.
     assert(!(execute && cap_op));
 
-    reg_t addr = auth.base + auth.offset + offset;
+    reg_t addr = auth.cursor + offset;
     if (!auth.tag) {
       raise_trap(CAUSE_CHERI_TAG_FAULT, authidx);
-    } else if (auth.sealed) {
+    } else if (auth.sealed()) {
       raise_trap(CAUSE_CHERI_SEAL_FAULT, authidx);
     } else if (load && !(auth.perms & BIT(CHERI_PERMIT_LOAD))) {
       raise_trap(CAUSE_CHERI_PERMIT_LOAD_FAULT, authidx);
@@ -322,7 +314,7 @@ class cheri_t : public extension_t {
     cap_register_t converted;
     convertCheriReg(&converted, &val);
     inmem.pesbt = compress_128cap(&converted);
-    inmem.cursor = converted.cr_base + converted.cr_offset;
+    inmem.cursor = converted.address();
 #else
     inmem = val;
 #endif

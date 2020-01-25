@@ -3,11 +3,11 @@
 cheri_reg_t cb_val = CS1;
 reg_t cb_base = cb_val.base;
 cheri_length_t cb_top = cb_val.base + cb_val.length;
-reg_t cb_ptr = cb_val.base + cb_val.offset;
+reg_t cb_ptr = cb_val.cursor;
 
 if (!cb_val.tag) {
   CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
-} else if (CS1.sealed) {
+} else if (CS1.sealed()) {
   CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
 } else if ((CS1.perms & BIT(CHERI_PERMIT_EXECUTE)) != BIT(CHERI_PERMIT_EXECUTE)) {
 #if DEBUG
@@ -39,14 +39,13 @@ else {
   SET_SCR(CHERI_SCR_PCC, cb_val);
 
   // Link cap
-  temp.offset = pc+4;
+  temp.cursor = CHERI->from_arch_pc(npc);
 
   WRITE_CD(temp);
 
 #if DEBUG
-  printf("CHERI: cjalr- - linkreg = %lu jumping to %lu\n", temp.offset, PCC.base
-         + cb_val.offset);
+  printf("CHERI: cjalr- - linkreg = %lu jumping to %lu\n", temp.cursor, cb_val.cursor);
 #endif //DEBUG
 
-  set_pc(PCC.base + cb_val.offset);
+  set_pc(cb_val.cursor);
 }

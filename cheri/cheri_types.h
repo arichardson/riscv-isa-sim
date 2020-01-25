@@ -41,45 +41,45 @@ __extension__ typedef unsigned __int128 cheri_length_t;
 
 /* The architectural permissions bits, may be greater than the number of bits
  * actually available in the encoding. */
-#define CHERI_USER_PERM_BITS 17
+#define CHERI_USER_PERM_BITS 16
 #define CHERI_PERM_BITS      15
 
-/* 256-bit Caps register format *
- * -------------------------------------------------------------------------
- * | length | base | offset | uperms | perms | S | reserved | otype | Tag  |
- * -------------------------------------------------------------------------
- * |  64    |  64  |   64   |   16   |  15   | 1 |   7     |   24   |  1   |
- * -------------------------------------------------------------------------
+#define OTYPE_UNSEALED 0x3ffffu
+#define OTYPE_MAX 0x3ffff
+
+/* 257-bit Caps register format *
+ * ----------------------------------------------------------------------------
+ * | base | length | cursor | flags | uperms | perms | otype | reserved | tag |
+ * ----------------------------------------------------------------------------
+ * |  64  |   64   |   64   |   1   |   16   |  15   |   24  |    8     |  1  |
+ * ----------------------------------------------------------------------------
  */
 struct cheri_reg_t {
  public:
   uint64_t base;
   cheri_length_t length;
-  uint64_t offset;
+  uint64_t cursor;
 
   uint32_t flags  : 1;
   uint32_t uperms : CHERI_USER_PERM_BITS;
   uint32_t perms  : CHERI_PERM_BITS;
-  uint32_t sealed : 1;
 
   uint32_t otype    : 24;
-  uint32_t reserved : 7;
+  uint32_t reserved : 8;
   uint32_t tag      : 1;
-};
 
-#define OTYPE_UNSEALED 0x3ffffu
-#define OTYPE_MAX 0x3ffff
+  bool sealed() const { return otype != OTYPE_UNSEALED; }
+};
 
 #define MAX_CHERI_LENGTH ((cheri_length_t)1u << 64)
 
 #define CHERI_NULL_CAP (cheri_reg_t) { \
   .base     = 0,                       \
   .length   = MAX_CHERI_LENGTH,      \
-  .offset   = 0,                       \
+  .cursor   = 0,                       \
   .flags    = 0,                       \
   .uperms   = 0,                       \
   .perms    = 0,                       \
-  .sealed   = 0,                       \
   .otype    = OTYPE_UNSEALED,          \
   .reserved = 0,                       \
   .tag      = 0                        \
@@ -88,11 +88,10 @@ struct cheri_reg_t {
 #define CHERI_ALMIGHTY_CAP (cheri_reg_t) { \
   .base     = 0,                           \
   .length   = MAX_CHERI_LENGTH,          \
-  .offset   = 0,                           \
+  .cursor   = 0,                           \
   .flags    = 0,                           \
   .uperms   = 0xfu,                        \
   .perms    = 0xfffu,                      \
-  .sealed   = 0,                           \
   .otype    = OTYPE_UNSEALED,              \
   .reserved = 0,                           \
   .tag      = 1                            \

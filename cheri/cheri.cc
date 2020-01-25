@@ -461,27 +461,28 @@ void cheri_t::reset() {
 
 void cheri_t::set_scr(int index, cheri_reg_t val, processor_t* proc) {
   state.scrs_reg_file.write(index, val);
+  reg_t offset = val.cursor - val.base;
   switch(index) {
     case CHERI_SCR_PCC:
-      proc->state.pc = val.offset;
+      proc->state.pc = offset;
       break;
     // case CHERI_SCR_UTCC:
-    //   proc->state.utvec = val.offset;
+    //   proc->state.utvec = offset;
     //   break;
     // case CHERI_SCR_UEPCC:
-    //   proc->state.uepc = val.offset;
+    //   proc->state.uepc = offset;
     //   break;
     case CHERI_SCR_STCC:
-      proc->set_csr(CSR_STVEC, val.offset);
+      proc->set_csr(CSR_STVEC, offset);
       break;
     case CHERI_SCR_SEPCC:
-      proc->set_csr(CSR_SEPC, val.offset);
+      proc->set_csr(CSR_SEPC, offset);
       break;
     case CHERI_SCR_MTCC:
-      proc->set_csr(CSR_MTVEC, val.offset);
+      proc->set_csr(CSR_MTVEC, offset);
       break;
     case CHERI_SCR_MEPCC:
-      proc->set_csr(CSR_MEPC, val.offset);
+      proc->set_csr(CSR_MEPC, offset);
       break;
     default:
       break;
@@ -490,31 +491,33 @@ void cheri_t::set_scr(int index, cheri_reg_t val, processor_t* proc) {
 
 cheri_reg_t cheri_t::get_scr(int index, processor_t* proc) {
   cheri_reg_t retVal = CHERI_STATE.scrs_reg_file[index];
+  reg_t offset = 0;
   switch(index) {
     case CHERI_SCR_PCC:
-      retVal.offset = proc->state.pc;
+      offset = proc->state.pc;
       break;
     // case CHERI_SCR_UTCC:
-    //   retVal.offset = proc->state.utvec;
+    //   offset = proc->state.utvec;
     //   break;
     // case CHERI_SCR_UEPCC:
-    //   retVal.offset = proc->state.uepc;
+    //   offset = proc->state.uepc;
     //   break;
     case CHERI_SCR_STCC:
-      retVal.offset = proc->get_csr(CSR_STVEC);
+      offset = proc->get_csr(CSR_STVEC);
       break;
     case CHERI_SCR_SEPCC:
-      retVal.offset = proc->get_csr(CSR_SEPC);
+      offset = proc->get_csr(CSR_SEPC);
       break;
     case CHERI_SCR_MTCC:
-      retVal.offset = proc->get_csr(CSR_MTVEC);
+      offset = proc->get_csr(CSR_MTVEC);
       break;
     case CHERI_SCR_MEPCC:
-      retVal.offset = proc->get_csr(CSR_MEPC);
+      offset = proc->get_csr(CSR_MEPC);
       break;
     default:
       break;
   }
+  retVal.cursor = retVal.base + offset;
   return retVal;
 }
 

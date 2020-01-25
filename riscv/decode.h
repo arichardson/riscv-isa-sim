@@ -172,7 +172,7 @@ public:
     if (!zero_reg || i != 0)
     {
       data[i] = CHERI_NULL_CAP;
-      data[i].offset = value;
+      data[i].cursor = value;
     }
   }
   void write(size_t i, cheri_reg_t value)
@@ -209,7 +209,7 @@ private:
 #define FLEN (p->get_flen())
 
 #ifdef CHERI_MERGED_RF
-#define READ_REG(reg) (STATE.XPR[reg].base + STATE.XPR[reg].offset)
+#define READ_REG(reg) STATE.XPR[reg].cursor
 #else //CHERI_MERGED_RF
 #define READ_REG(reg) STATE.XPR[reg]
 #endif //CHERI_MERGED_RF

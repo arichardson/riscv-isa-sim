@@ -517,9 +517,9 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
 #ifdef ENABLE_CHERI
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
     state.sccsr = cheri->get_ccsr();
+    cheri_reg_t sepcc = cheri->state.scrs_reg_file[CHERI_SCR_PCC];
+    sepcc.cursor = epc;
     epc = cheri->to_arch_pc(epc);
-    cheri_reg_t sepcc = cheri->state.scrs_reg_file[CHERI_SCR_SEPCC];
-    sepcc.offset = epc;
     cheri->state.scrs_reg_file.write(CHERI_SCR_SEPCC, sepcc);
     cheri->state.scrs_reg_file.write(CHERI_SCR_PCC, cheri->get_scr(CHERI_SCR_STCC, this));
 #if DEBUG
@@ -549,9 +549,9 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
 #ifdef ENABLE_CHERI
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
     state.mccsr = cheri->get_ccsr();
+    cheri_reg_t mepcc = cheri->state.scrs_reg_file[CHERI_SCR_PCC];
+    mepcc.cursor = epc;
     epc = cheri->to_arch_pc(epc);
-    cheri_reg_t mepcc = cheri->state.scrs_reg_file[CHERI_SCR_MEPCC];
-    mepcc.offset = epc;
     cheri->state.scrs_reg_file.write(CHERI_SCR_MEPCC, mepcc);
     cheri->state.scrs_reg_file.write(CHERI_SCR_PCC, cheri->get_scr(CHERI_SCR_MTCC, this));
 #if DEBUG

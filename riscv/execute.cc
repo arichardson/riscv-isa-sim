@@ -222,8 +222,8 @@ void processor_t::step(size_t n, insn_t insn)
             rvfi_dii_output.rvfi_dii_pc_rdata = ext ? ext->to_arch_pc(pc) : pc;
             rvfi_dii_output.rvfi_dii_insn = insn.bits();
 #ifdef CHERI_MERGED_RF
-            rvfi_dii_output.rvfi_dii_rs1_data = state.XPR[insn.rs1()].offset;
-            rvfi_dii_output.rvfi_dii_rs2_data = state.XPR[insn.rs2()].offset;
+            rvfi_dii_output.rvfi_dii_rs1_data = state.XPR[insn.rs1()].cursor;
+            rvfi_dii_output.rvfi_dii_rs2_data = state.XPR[insn.rs2()].cursor;
 
 #else
             rvfi_dii_output.rvfi_dii_rs1_data = state.XPR[insn.rs1()];

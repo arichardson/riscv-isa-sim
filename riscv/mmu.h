@@ -164,7 +164,7 @@ public:
 #ifdef ENABLE_CHERI128
   load_func_impl(cheri_reg_inmem, data.cursor, 8, misaligned_load_cap)
 #else
-  load_func_impl(cheri_reg_inmem, data.base + data.offset, 8, misaligned_load_cap)
+  load_func_impl(cheri_reg_inmem, data.cursor, 8, misaligned_load_cap)
 #endif
   #undef misaligned_load_cap
 #endif
@@ -275,7 +275,7 @@ public:
 #ifdef ENABLE_CHERI128
   store_func_impl(cheri_reg_inmem, val.cursor, 8, misaligned_store_cap)
 #else
-  store_func_impl(cheri_reg_inmem, val.base + val.offset, 8, misaligned_store_cap)
+  store_func_impl(cheri_reg_inmem, val.cursor, 8, misaligned_store_cap)
 #endif
   #undef misaligned_store_cap
 #endif

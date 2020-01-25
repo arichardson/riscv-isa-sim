@@ -1,11 +1,11 @@
 // See LICENSE_CHERI for license details.
 
-uint64_t cursor = CS1.base + CS1.offset;
+uint64_t cursor = CS1.cursor;
 
 cheri_reg_t temp = CS1;
 temp.base = cursor;
 temp.length = RS2;
-temp.offset = 0;
+temp.cursor = cursor;
 
 if (!CS1.tag) {
   CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
@@ -19,7 +19,7 @@ else if (temp.base < CS1.base) {
 else if (temp.base + temp.length > CS1.base + CS1.length) {
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
 }
-else if (!cheri_is_representable(temp.sealed, temp.base, temp.length, temp.offset)) {
+else if (!cheri_is_representable(temp.sealed(), temp.base, temp.length, temp.cursor, temp.cursor)) {
   CHERI->raise_trap(CAUSE_CHERI_BOUNDS_FAULT, insn.cs1());
 }
 else {
