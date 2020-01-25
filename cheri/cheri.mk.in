@@ -48,43 +48,40 @@ cheri_insn_list = \
 	cfromptr \
 	csub \
 	cmove \
-	cjr \
 	cjalr \
 	ccall \
 	ctestsubset \
 	cspecialrw \
-	lbddc \
-	lbuddc \
-	lhddc \
-	lhuddc \
-	lwddc \
-	lwuddc \
-	ldddc \
-	lqddc \
-	lbcap \
-	lbucap \
-	lhcap \
-	lhucap \
-	lwcap \
-	lwucap \
-	lqcap \
-	ldcap \
-	sbddc \
-	shddc \
-	swddc \
-	sdddc \
-	sbcap \
-	shcap \
-	swcap \
-	sdcap \
-  sqddc \
-	sqcap \
+	lb_ddc \
+	lbu_ddc \
+	lh_ddc \
+	lhu_ddc \
+	lw_ddc \
+	lwu_ddc \
+	ld_ddc \
+	lq_ddc \
+	lb_cap \
+	lbu_cap \
+	lh_cap \
+	lhu_cap \
+	lw_cap \
+	lwu_cap \
+	lq_cap \
+	ld_cap \
+	sb_ddc \
+	sh_ddc \
+	sw_ddc \
+	sd_ddc \
+	sb_cap \
+	sh_cap \
+	sw_cap \
+	sd_cap \
+	sq_ddc \
+	sq_cap \
+	lq \
+	sq \
 	ctag \
 	creadhpmcounter \
-	clc  \
-	csc  \
-#	lc \
-	sc \
 
 cheri_gen_srcs = \
 	$(addsuffix .cc,$(cheri_insn_list))
