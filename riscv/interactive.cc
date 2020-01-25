@@ -364,6 +364,20 @@ void sim_t::interactive_fregs(const std::string& cmd, const std::vector<std::str
   fprintf(stderr, "%g\n", isBoxedF32(f.r) ? (double)f.s : NAN);
 }
 
+static void print_creg(cheri_reg_t creg, const char *name)
+{
+  if (name)
+    fprintf(stderr, "%-5s: ", name);
+
+  fprintf(stderr, "v:%" PRIu32 " s:%" PRIu32 " f:%" PRIu32 " p:%016" PRIx64
+         " b:%016" PRIx64 " l:%1" PRIx64 "%016" PRIx64 " o:%016" PRIx64
+         " t:%08" PRIx32 "\n",
+         creg.tag, creg.sealed, creg.flags,
+         (((uint64_t)creg.uperms << CHERI_PERM_BITS) | creg.perms), creg.base,
+         (uint64_t)(creg.length >> 64), (uint64_t)(creg.length & UINT64_MAX),
+         creg.offset, creg.otype);
+}
+
 #ifdef ENABLE_CHERI
 void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::string>& args)
 {
@@ -379,44 +393,11 @@ void sim_t::interactive_creg(const std::string& cmd, const std::vector<std::stri
       creg = CHERI_STATE.reg_file[r];
 #endif //CHERI_MERGED_RF
 
-      fprintf(stderr, "%-5s:" "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 "%016" PRIx64 " | offset: 0x%016" PRIx64
-      " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016" PRIx32 " | otype: 0x%016" PRIx32 " | flags: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}\n",
-
-      cheri_reg_names[r],
-      creg.base,
-      (uint64_t)(creg.length >> 64),
-      (uint64_t)(creg.length & UINT64_MAX),
-      creg.offset,
-
-      creg.uperms,
-      creg.perms,
-      creg.sealed,
-
-      creg.otype,
-      creg.flags,
-      creg.tag
-      );
+      print_creg(creg, cheri_reg_names[r]);
     }
   } else {
     cheri_reg_t creg = get_creg(args);
-
-    fprintf(stderr, "{base: 0x%016" PRIx64 " | length: 0x%1" PRIx64 "%016" PRIx64 " | offset: 0x%016" PRIx64
-    " | uperm: 0x%016" PRIx32 " | perms: 0x%016" PRIx32 " | sealed: 0x%016"
-    PRIx32 " | otype: 0x%016" PRIx32 " | flags: 0x%016" PRIx32 " | tag: 0x%016" PRIx32 "}\n",
-
-    creg.base,
-    (uint64_t)(creg.length >> 64),
-    (uint64_t)(creg.length & UINT64_MAX),
-    creg.offset,
-
-    creg.uperms,
-    creg.perms,
-    creg.sealed,
-
-    creg.otype,
-    creg.flags,
-    creg.tag
-    );
+    print_creg(creg, NULL);
   }
 }
 #endif //ENABLE_CHERI
