@@ -104,7 +104,7 @@ public:
     data = misaligned_load(addr, sizeof(data), paddr); \
     goto success_load;
 
-  #define load_func_impl(type, intval_expr, rvfi_mask_bytes, misaligned_code) \
+  #define load_func_impl(type, intval_expr, trace_mask_bytes, misaligned_code) \
     inline type##_t load_##type(reg_t addr, reg_t *paddr = NULL) { \
       type##_t data; \
       reg_t vpn = addr >> PGSHIFT; \
@@ -129,7 +129,8 @@ public:
         } \
         goto success_load; \
       } \
-      load_slow_path(addr, sizeof(type##_t), (uint8_t*)&data, paddr); \
+      load_slow_path(addr, sizeof(type##_t), (trace_mask_bytes), \
+                     (uint8_t*)&data, paddr); \
       goto success_load; \
       success_load: \
       if (proc) { \
@@ -137,7 +138,7 @@ public:
         if (proc->rvfi_dii) { \
           proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
           proc->rvfi_dii_output.rvfi_dii_mem_rdata = intval_expr; \
-          proc->rvfi_dii_output.rvfi_dii_mem_rmask = (1 << (rvfi_mask_bytes)) - 1; \
+          proc->rvfi_dii_output.rvfi_dii_mem_rmask = (1 << (trace_mask_bytes)) - 1; \
         } \
       } \
       return from_le(data); \
@@ -184,7 +185,7 @@ public:
   #define misaligned_store_uint \
     return misaligned_store(addr, val, sizeof(val), paddr);
 
-  #define store_func_impl(type, intval_expr, rvfi_mask_bytes, misaligned_code) \
+  #define store_func_impl(type, intval_expr, trace_mask_bytes, misaligned_code) \
     void store_##type(reg_t addr, type##_t val, reg_t *paddr = NULL) { \
       reg_t vpn = addr >> PGSHIFT; \
       size_t size = sizeof(type##_t); \
@@ -210,13 +211,14 @@ public:
       } \
       else { \
         if (proc) WRITE_MEM(addr, val, size); \
-        store_slow_path(addr, sizeof(type##_t), (const uint8_t*)&val, paddr); \
+        store_slow_path(addr, sizeof(type##_t), (trace_mask_bytes), \
+                        (const uint8_t*)&val, paddr); \
       } \
       if (proc) { \
         if (proc->rvfi_dii) { \
           proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
           proc->rvfi_dii_output.rvfi_dii_mem_wdata = intval_expr; \
-          proc->rvfi_dii_output.rvfi_dii_mem_wmask = (1 << (rvfi_mask_bytes)) - 1; \
+          proc->rvfi_dii_output.rvfi_dii_mem_wmask = (1 << (trace_mask_bytes)) - 1; \
         } \
       } \
     }
@@ -479,8 +481,10 @@ private:
 
   // handle uncommon cases: TLB misses, page faults, MMIO
   tlb_entry_t fetch_slow_path(reg_t addr);
-  void load_slow_path(reg_t addr, reg_t len, uint8_t* bytes, reg_t* paddr);
-  void store_slow_path(reg_t addr, reg_t len, const uint8_t* bytes, reg_t* paddr);
+  void load_slow_path(reg_t addr, reg_t len, reg_t trace_mask_bytes,
+                      uint8_t* bytes, reg_t* paddr);
+  void store_slow_path(reg_t addr, reg_t len, reg_t trace_mask_bytes,
+                       const uint8_t* bytes, reg_t* paddr);
 #ifndef ENABLE_CHERI
   reg_t translate(reg_t addr, reg_t len, access_type type);
 #endif

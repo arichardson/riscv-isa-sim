@@ -102,8 +102,8 @@ reg_t reg_from_bytes(size_t len, const uint8_t* bytes)
   abort();
 }
 
-void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes,
-                           reg_t* ppaddr)
+void mmu_t::load_slow_path(reg_t addr, reg_t len, reg_t trace_mask_bytes,
+                           uint8_t* bytes, reg_t* ppaddr)
 {
   reg_t paddr = translate(addr, len, LOAD);
   if (ppaddr)
@@ -120,22 +120,22 @@ void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes,
   }
 
   if (!matched_trigger) {
-    reg_t data = reg_from_bytes(len, bytes);
+    reg_t data = reg_from_bytes(trace_mask_bytes, bytes);
     matched_trigger = trigger_exception(OPERATION_LOAD, addr, data);
     if (matched_trigger)
       throw *matched_trigger;
   }
 }
 
-void mmu_t::store_slow_path(reg_t addr, reg_t len, const uint8_t* bytes,
-                            reg_t* ppaddr)
+void mmu_t::store_slow_path(reg_t addr, reg_t len, reg_t trace_mask_bytes,
+                            const uint8_t* bytes, reg_t* ppaddr)
 {
   reg_t paddr = translate(addr, len, STORE);
   if (ppaddr)
     *ppaddr = paddr;
 
   if (!matched_trigger) {
-    reg_t data = reg_from_bytes(len, bytes);
+    reg_t data = reg_from_bytes(trace_mask_bytes, bytes);
     matched_trigger = trigger_exception(OPERATION_STORE, addr, data);
     if (matched_trigger)
       throw *matched_trigger;
