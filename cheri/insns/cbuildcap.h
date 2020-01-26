@@ -13,7 +13,7 @@ if (!auth.tag) {
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, authidx);
 } else if (CS2.base() > CS2.top()) {
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs2());
-} else if ((auth.perms & CS2.perms) != CS2.perms) {
+} else if ((CS2.perms & auth.perms) != CS2.perms) {
   CHERI->raise_trap(CAUSE_CHERI_ACCESSPERM_FAULT, authidx);
 } else {
   cheri_reg_t cap = auth;
