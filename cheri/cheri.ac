@@ -1,15 +1,1 @@
-AC_LANG_CPLUSPLUS
-
-AC_MSG_CHECKING([whether to enable CHERI 128 compression])
-AC_ARG_ENABLE([cheri128],
-  AS_HELP_STRING([--disable-cheri128], [Disable CHERI 128 Compression]),
-  [], [enable_cheri128=$enable_cheri])
-AS_IF([test "x$enable_cheri128" != "xno"], [
-  AS_IF([ test "x$enable_cheri" = "xno" ],
-    AC_MSG_ERROR([Cannot enable CHERI 128 compression without CHERI])
-  )
-  enable_cheri128=yes
-  AC_DEFINE([ENABLE_CHERI128],,[Enable CHERI 128 Compression])
-])
-AC_MSG_RESULT([$enable_cheri128])
 

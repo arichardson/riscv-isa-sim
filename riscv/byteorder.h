@@ -17,16 +17,12 @@ static inline int64_t swap(int64_t n) { return __builtin_bswap64(n); }
 
 #ifdef ENABLE_CHERI
 #include "cheri_types.h"
-#ifdef ENABLE_CHERI128
 static inline cheri_reg_inmem_t swap(cheri_reg_inmem_t c) {
   cheri_reg_inmem_t ret;
   ret.cursor = swap(c.pesbt);
   ret.pesbt = swap(c.cursor);
   return ret;
 }
-#else
-#error "Byte-swapping not implemented for uncompressed capabilities!"
-#endif
 #endif
 
 #ifdef WORDS_BIGENDIAN

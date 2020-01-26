@@ -41,19 +41,12 @@ __extension__ typedef unsigned __int128 cheri_length_t;
 
 /* The architectural permissions bits, may be greater than the number of bits
  * actually available in the encoding. */
-#define CHERI_USER_PERM_BITS 16
+#define CHERI_USER_PERM_BITS 5
 #define CHERI_PERM_BITS      15
 
 #define OTYPE_UNSEALED 0x3ffffu
 #define OTYPE_MAX 0x3ffff
 
-/* 257-bit Caps register format *
- * ----------------------------------------------------------------------------
- * | base | length | cursor | flags | uperms | perms | otype | reserved | tag |
- * ----------------------------------------------------------------------------
- * |  64  |   64   |   64   |   1   |   16   |  15   |   24  |    8     |  1  |
- * ----------------------------------------------------------------------------
- */
 struct cheri_reg_t {
  public:
   uint64_t base;
@@ -97,20 +90,10 @@ struct cheri_reg_t {
   .tag      = 1                            \
 }
 
-#ifdef ENABLE_CHERI128
-//typedef cheri_reg_t cap_register_t;
-//#define  HAVE_CAP_REGISTER_T 1
-
 /* CHERI compressed format in memory */
 struct cheri_reg_inmem_t {
  public:
   uint64_t cursor;
   uint64_t pesbt;
 };
-#else
-/* In memory is same as in register (except for tag) */
-typedef cheri_reg_t cheri_reg_inmem_t;
-#endif
-
-
 #endif

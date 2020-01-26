@@ -27,9 +27,6 @@
 /* Enable CHERI Extension */
 #undef ENABLE_CHERI
 
-/* Enable CHERI 128 Compression */
-#undef ENABLE_CHERI128
-
 /* Define if subproject MCPPBS_SPROJ_NORM is enabled */
 #undef FESVR_ENABLED
 

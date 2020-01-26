@@ -452,11 +452,7 @@ void cheri_t::reset() {
   state.scrs_reg_file.write(CHERI_SCR_MEPCC, CHERI_ALMIGHTY_CAP);
 
   /* Set cap size to 2*xlen; i.e., 128 cap size for RV64 and 64 for RV32 */
-#ifdef ENABLE_CHERI128
   clen = 2 * p->get_xlen();
-#else //ENABLE_CHERI128
-  clen = 4 * p->get_xlen();
-#endif //ENABLE_CHERI128
 };
 
 void cheri_t::set_scr(int index, cheri_reg_t val, processor_t* proc) {

@@ -87,11 +87,7 @@
 # define WRITE_CREG(reg, val) CHERI_STATE.reg_file.write(reg, val)
 #endif /* CHERI_MERGED_RF */
 
-#ifdef ENABLE_CHERI128
-# define CHERI_CAPSIZE_BYTES 16
-#else
-# define CHERI_CAPSIZE_BYTES 32
-#endif /* ENABLE_CHERI128 */
+#define CHERI_CAPSIZE_BYTES 16
 
 extern const char *cheri_reg_names[32];
 
@@ -259,14 +255,10 @@ class cheri_t : public extension_t {
                     /*store_local=*/false);
     reg_t paddr;
     cheri_reg_inmem_t inmem = MMU.load_cheri_reg_inmem(addr, &paddr);
-#ifdef ENABLE_CHERI128
     cheri_reg_t ret;
     cap_register_t converted;
     decompress_128cap(inmem.pesbt, inmem.cursor, &converted);
     retrieveCheriReg(&ret, &converted);
-#else
-    cheri_reg_t ret = inmem;
-#endif
     ret.tag = (auth.perms & BIT(CHERI_PERMIT_LOAD_CAPABILITY)) &&
               get_tag_translated(paddr);
     return ret;
@@ -310,14 +302,10 @@ class cheri_t : public extension_t {
                     /*load=*/false, /*store=*/true, /*execute=*/false,
                     /*cap_op=*/true, store_local);
     cheri_reg_inmem_t inmem;
-#ifdef ENABLE_CHERI128
     cap_register_t converted;
     convertCheriReg(&converted, &val);
     inmem.pesbt = compress_128cap(&converted);
     inmem.cursor = converted.address();
-#else
-    inmem = val;
-#endif
     reg_t paddr;
     MMU.store_cheri_reg_inmem(addr, inmem, &paddr);
     set_tag_translated(paddr, val.tag);
