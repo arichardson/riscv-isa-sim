@@ -79,17 +79,20 @@ cheri_reg_inmem_t cheri_reg_t::inmem() const {
 }
 
 void cheri_reg_t::set_bounds(uint64_t new_base, cheri_length_t new_top) {
+  reserved = 0;
   struct cap_register cap = cap_lib();
   cc128_setbounds(&cap, new_base, new_top);
   set_cap_lib(cap);
-  reserved = 0;
 }
 
 void cheri_reg_t::set_cursor(uint64_t new_cursor) {
-  if (!cc128_is_representable_new_addr(sealed(), base(), length(), cursor(), new_cursor)) {
-    *this = cheri_reg_t(new_cursor);
-  }
-  _cursor = new_cursor;
   reserved = 0;
+  if (!cc128_is_representable_new_addr(sealed(), base(), length(), cursor(), new_cursor)) {
+    cheri_reg_inmem_t newmem = inmem();
+    newmem.cursor = new_cursor;
+    *this = cheri_reg_t(newmem, false);
+  } else {
+    _cursor = new_cursor;
+  }
 }
 #endif
