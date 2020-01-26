@@ -208,18 +208,29 @@ void processor_t::step(size_t n, insn_t insn)
             state.single_step = state.STEP_STEPPED;
           }
 
-
           insn_fetch_t fetch;
 
           if (rvfi_dii) {
             // Zero output before writing new trace fields
             rvfi_dii_output = {0};
 
+            // Set known fields before we might trap.
+            rvfi_dii_output.rvfi_dii_order = state.minstret;
+            rvfi_dii_output.rvfi_dii_pc_rdata = ext ? ext->to_arch_pc(pc) : pc;
+
+            // Perform PCC checks.
+            // TODO: Also invoke MMU (but don't trap on physical pages outside
+            // the memory map etc as would happen currently).
+            if (ext) {
+              int length = insn.length();
+              for (int i = 0; i < length; i += 2) {
+                ext->check_ifetch_granule(pc, pc + i);
+              }
+            }
+
             fetch = {decode_insn(insn), insn};
 
-            rvfi_dii_output.rvfi_dii_order = state.minstret;
             auto *ext = get_extension();
-            rvfi_dii_output.rvfi_dii_pc_rdata = ext ? ext->to_arch_pc(pc) : pc;
             rvfi_dii_output.rvfi_dii_insn = insn.bits();
 #ifdef CHERI_MERGED_RF
             rvfi_dii_output.rvfi_dii_rs1_data = state.XPR[insn.rs1()].cursor();
@@ -233,11 +244,7 @@ void processor_t::step(size_t n, insn_t insn)
             rvfi_dii_output.rvfi_dii_rs1_addr = insn.rs1();
             rvfi_dii_output.rvfi_dii_rs2_addr = insn.rs2();
           } else {
-#ifdef ENABLE_CHERI
             fetch = mmu->load_insn(pc);
-#else
-            fetch = mmu->load_insn(pc);
-#endif
           }
 
 
