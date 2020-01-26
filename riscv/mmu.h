@@ -104,7 +104,7 @@ public:
     data = misaligned_load(addr, sizeof(data), paddr); \
     goto success_load;
 
-  #define load_func_impl(type, intval_expr, trace_mask_bytes, misaligned_code) \
+  #define load_func_impl(type, intval_expr, rvfi_mask_bytes, trace_mask_bytes, misaligned_code) \
     inline type##_t load_##type(reg_t addr, reg_t *paddr = NULL) { \
       type##_t data; \
       reg_t vpn = addr >> PGSHIFT; \
@@ -138,14 +138,15 @@ public:
         if (proc->rvfi_dii) { \
           proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
           proc->rvfi_dii_output.rvfi_dii_mem_rdata = intval_expr; \
-          proc->rvfi_dii_output.rvfi_dii_mem_rmask = (1 << (trace_mask_bytes)) - 1; \
+          proc->rvfi_dii_output.rvfi_dii_mem_rmask = (1 << (rvfi_mask_bytes)) - 1; \
         } \
       } \
       return from_le(data); \
     }
 
   #define load_func(type) \
-    load_func_impl(type, data, sizeof(type##_t), misaligned_load_uint)
+    load_func_impl(type, data, sizeof(type##_t), sizeof(type##_t), \
+                   misaligned_load_uint)
 
   // load value from memory at aligned address; zero extend to register width
   load_func(uint8)
@@ -161,7 +162,10 @@ public:
 
 #ifdef ENABLE_CHERI
   #define misaligned_load_cap throw trap_load_address_misaligned(addr);
-  load_func_impl(cheri_reg_inmem, data.cursor, 8, misaligned_load_cap)
+  // Other implementations seem to report a not-so-useful mask of 0 due to
+  // overflowing their calculations (mask is expected to fit in 8 bits) and not
+  // special-casing capabilities as just the cursor like with registers.
+  load_func_impl(cheri_reg_inmem, data.cursor, 0, 8, misaligned_load_cap)
   #undef misaligned_load_cap
 #endif
 
@@ -181,7 +185,7 @@ public:
   #define misaligned_store_uint \
     return misaligned_store(addr, val, sizeof(val), paddr);
 
-  #define store_func_impl(type, intval_expr, trace_mask_bytes, misaligned_code) \
+  #define store_func_impl(type, intval_expr, rvfi_mask_bytes, trace_mask_bytes, misaligned_code) \
     void store_##type(reg_t addr, type##_t val, reg_t *paddr = NULL) { \
       reg_t vpn = addr >> PGSHIFT; \
       size_t size = sizeof(type##_t); \
@@ -214,13 +218,14 @@ public:
         if (proc->rvfi_dii) { \
           proc->rvfi_dii_output.rvfi_dii_mem_addr = addr; \
           proc->rvfi_dii_output.rvfi_dii_mem_wdata = intval_expr; \
-          proc->rvfi_dii_output.rvfi_dii_mem_wmask = (1 << (trace_mask_bytes)) - 1; \
+          proc->rvfi_dii_output.rvfi_dii_mem_wmask = (1 << (rvfi_mask_bytes)) - 1; \
         } \
       } \
     }
 
   #define store_func(type) \
-    store_func_impl(type, val, sizeof(val), misaligned_store_uint)
+    store_func_impl(type, val, sizeof(type##_t), sizeof(type##_t), \
+                    misaligned_store_uint)
 
   // template for functions that perform an atomic memory operation
   #define amo_func(type) \
@@ -268,7 +273,8 @@ public:
 
 #ifdef ENABLE_CHERI
   #define misaligned_store_cap throw trap_store_address_misaligned(addr);
-  store_func_impl(cheri_reg_inmem, val.cursor, 8, misaligned_store_cap)
+  // See load definition for mask explanation.
+  store_func_impl(cheri_reg_inmem, val.cursor, 0, 8, misaligned_store_cap)
   #undef misaligned_store_cap
 #endif
 
