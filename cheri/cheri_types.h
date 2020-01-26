@@ -42,7 +42,7 @@ __extension__ typedef unsigned __int128 cheri_length_t;
 
 /* The architectural permissions bits, may be greater than the number of bits
  * actually available in the encoding. */
-#define CHERI_USER_PERM_BITS  5
+#define CHERI_USER_PERM_BITS  4
 #define CHERI_USER_PERM_SHIFT 15
 #define CHERI_PERM_BITS       12
 
