@@ -31,7 +31,9 @@ if (!CS1.tag) {
   throw trap_instruction_address_misaligned(new_pc);
 } else {
   set_pc(new_pc);
-  SET_SCR(CHERI_SCR_PCC, CS1);
+  cheri_reg_t icc = CS1;
+  icc.otype = OTYPE_UNSEALED;
+  SET_SCR(CHERI_SCR_PCC, icc);
 
   /* IDC */
   cheri_reg_t idc = CS2;
