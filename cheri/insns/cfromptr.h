@@ -1,7 +1,7 @@
 // See LICENSE_CHERI for license details.
 
 cheri_reg_t auth = (insn.cs1() == 0) ? DDC : CS1;
-reg_t authidx = ((insn.cs1() == 0) << 5) | insn.cs1();
+reg_t authidx = (insn.cs1() == 0) ? (0x20 | CHERI_SCR_DDC) : insn.cs1();
 
 if (RS2 == 0) {
   WRITE_CD(cheri_reg_t());

@@ -1,7 +1,7 @@
 // See LICENSE_CHERI for license details.
 
 cheri_reg_t auth = (insn.cs2() == 0) ? DDC : CS2;
-reg_t authidx = ((insn.cs2() == 0) << 5) | insn.cs2();
+reg_t authidx = (insn.cs2() == 0) ? (0x20 | CHERI_SCR_DDC) : insn.cs2();
 
 if (!auth.tag) {
   CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, authidx);
