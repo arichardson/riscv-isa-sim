@@ -457,7 +457,7 @@ void cheri_t::reset() {
 
 void cheri_t::set_scr(int index, cheri_reg_t val, processor_t* proc) {
   state.scrs_reg_file.write(index, val);
-  reg_t offset = val.cursor - val.base;
+  reg_t offset = val.offset();
   switch(index) {
     case CHERI_SCR_PCC:
       proc->state.pc = offset;
@@ -513,7 +513,7 @@ cheri_reg_t cheri_t::get_scr(int index, processor_t* proc) {
     default:
       break;
   }
-  retVal.cursor = retVal.base + offset;
+  retVal.set_offset(offset);
   return retVal;
 }
 

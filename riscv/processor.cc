@@ -509,23 +509,22 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     if (rvfi_dii) {
       rvfi_dii_output.rvfi_dii_pc_wdata = state.pc; /* architectural! */
     }
-    if (auto *ext = get_extension()) {
-      state.pc = ext->from_arch_pc(state.pc);
-      epc = ext->to_arch_pc(epc);
-    }
     state.scause = t.cause();
 #ifdef ENABLE_CHERI
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
     state.sccsr = cheri->get_ccsr();
     cheri_reg_t sepcc = cheri->state.scrs_reg_file[CHERI_SCR_PCC];
-    sepcc.cursor = epc;
-    epc = cheri->to_arch_pc(epc);
+    sepcc.set_cursor(epc);
     cheri->state.scrs_reg_file.write(CHERI_SCR_SEPCC, sepcc);
     cheri->state.scrs_reg_file.write(CHERI_SCR_PCC, cheri->get_scr(CHERI_SCR_STCC, this));
 #if DEBUG
     fprintf(stderr, "processor.cc: supervisor mode trap, PC is 0x%016lx\n", state.pc);
 #endif //DEBUG
 #endif /* ENABLE_CHERI */
+    if (auto *ext = get_extension()) {
+      state.pc = ext->from_arch_pc(state.pc);
+      epc = ext->to_arch_pc(epc);
+    }
     state.sepc = epc;
     state.stval = t.get_tval();
 
@@ -539,25 +538,24 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     reg_t vector = (state.mtvec & 1) && interrupt ? 4*bit : 0;
     state.pc = (state.mtvec & ~(reg_t)1) + vector;
     if (rvfi_dii) {
-      rvfi_dii_output.rvfi_dii_pc_wdata = state.pc; /* arechitectural! */
-    }
-    if (auto *ext = get_extension()) {
-      state.pc = ext->from_arch_pc(state.pc);
-      epc = ext->to_arch_pc(epc);
+      rvfi_dii_output.rvfi_dii_pc_wdata = state.pc; /* architectural! */
     }
     state.mcause = t.cause();
 #ifdef ENABLE_CHERI
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
     state.mccsr = cheri->get_ccsr();
     cheri_reg_t mepcc = cheri->state.scrs_reg_file[CHERI_SCR_PCC];
-    mepcc.cursor = epc;
-    epc = cheri->to_arch_pc(epc);
+    mepcc.set_cursor(epc);
     cheri->state.scrs_reg_file.write(CHERI_SCR_MEPCC, mepcc);
     cheri->state.scrs_reg_file.write(CHERI_SCR_PCC, cheri->get_scr(CHERI_SCR_MTCC, this));
 #if DEBUG
     fprintf(stderr, "processor.cc: machine mode trap, PC is 0x%016lx\n", state.pc);
 #endif //DEBUG
 #endif /* ENABLE_CHERI */
+    if (auto *ext = get_extension()) {
+      state.pc = ext->from_arch_pc(state.pc);
+      epc = ext->to_arch_pc(epc);
+    }
     state.mepc = epc;
     state.mtval = t.get_tval();
 

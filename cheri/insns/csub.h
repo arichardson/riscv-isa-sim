@@ -1,3 +1,3 @@
 // See LICENSE_CHERI for license details.
 
-WRITE_RD(CS1.cursor - CS2.cursor);
+WRITE_RD(CS1.cursor() - CS2.cursor());

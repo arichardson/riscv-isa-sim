@@ -1,51 +1,30 @@
 // See LICENSE_CHERI for license details.
 
-cheri_reg_t cb_val = CS1;
-reg_t cb_base = cb_val.base;
-cheri_length_t cb_top = cb_val.base + cb_val.length;
-reg_t cb_ptr = cb_val.cursor;
+reg_t new_pc = CS1.cursor() & ~(reg_t(1));
+reg_t min_insn_bytes = p->supports_extension('C') ? 2 : 4;
 
-if (!cb_val.tag) {
+if (!CS1.tag) {
   CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
 } else if (CS1.sealed()) {
   CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
 } else if ((CS1.perms & BIT(CHERI_PERMIT_EXECUTE)) != BIT(CHERI_PERMIT_EXECUTE)) {
-#if DEBUG
-  printf("CHERI: Trying to execute with no cap LOAD permissions\n");
-#endif //DEBUG
   CHERI->raise_trap(CAUSE_CHERI_PERMIT_EXECUTE_FAULT, insn.cs1());
-} else if (cb_ptr < cb_base) {
-#if DEBUG
-  printf("CHERI: Trying to execute with wrong bounds\n");
-#endif //DEBUG
+} else if (CS1.cursor() < CS1.base()) {
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
-} else if (cb_ptr + 4 > cb_top) {
-#if DEBUG
-  printf("CHERI: Trying to execute with wrong bounds\n");
-#endif //DEBUG
+} else if (CS1.cursor() + min_insn_bytes > CS1.top()) {
   CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
-}
-// FIXME
-// else if (cb_ptr % 4) != 0 then
-// SignalException(AdEL)
-else {
-#if DEBUG
-  if(cb_ptr % 4 != 0) {
-    fprintf(stderr, "cjalr: ERROR jump to unaligned PC not supported!!!");
-  }
-#endif //DEBUG
-  cheri_reg_t temp = GET_SCR(CHERI_SCR_PCC);
+} else if (CS1.base() & ~p->pc_alignment_mask()) {
+  CHERI->raise_trap(CAUSE_CHERI_UNALIGNED_BASE, insn.cs1());
+} else if (new_pc & ~p->pc_alignment_mask()) {
+  throw trap_instruction_address_misaligned(new_pc);
+} else {
+  cheri_reg_t link = GET_SCR(CHERI_SCR_PCC);
+  link.set_cursor(CHERI->from_arch_pc(npc));
+  /* We were tagged and in bounds for this instruction, so at worst next
+   * instruction is just out of bounds but still representable. */
+  assert(link.tag);
+  WRITE_CD(link);
 
-  SET_SCR(CHERI_SCR_PCC, cb_val);
-
-  // Link cap
-  temp.cursor = CHERI->from_arch_pc(npc);
-
-  WRITE_CD(temp);
-
-#if DEBUG
-  printf("CHERI: cjalr- - linkreg = %lu jumping to %lu\n", temp.cursor, cb_val.cursor);
-#endif //DEBUG
-
-  set_pc(cb_val.cursor);
+  set_pc(new_pc);
+  SET_SCR(CHERI_SCR_PCC, CS1);
 }

@@ -15,6 +15,9 @@
 #include <memory>
 #include <config.h>
 #include "../VERSION"
+#ifdef ENABLE_CHERI
+#include "cheri.h"
+#endif
 
 static void help(int exit_code = 1)
 {
@@ -219,6 +222,7 @@ int main(int argc, char** argv)
   parser.option(0, "varch", 1, [&](const char* s){varch = s;});
   parser.option(0, "device", 1, device_parser);
 #ifdef ENABLE_CHERI
+  register_extension("cheri", [](){ return new cheri_t(); });
   extension = find_extension("cheri");
 #else
   parser.option(0, "extension", 1, [&](const char* s){extension = find_extension(s);});

@@ -1,12 +1,9 @@
 // See LICENSE_CHERI for license details.
 
-if (CS1.tag && CS1.sealed()) CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
-else {
-  cheri_reg_t temp = CS1;
-  reg_t new_cursor = RS2;
-  if (!cheri_is_representable(CS1.sealed(), CS1.base, CS1.length, CS1.cursor, new_cursor)) {
-    temp = CHERI_NULL_CAP;
-  }
-  temp.cursor = RS2;
-  WRITE_CD(temp);
+if (CS1.tag && CS1.sealed()) {
+  CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
+} else {
+  cheri_reg_t cap = CS1;
+  cap.set_cursor(RS2);
+  WRITE_CD(cap);
 }

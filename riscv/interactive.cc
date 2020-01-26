@@ -324,7 +324,7 @@ void sim_t::interactive_reg(const std::string& cmd, const std::vector<std::strin
     for (int r = 0; r < NXPR; ++r) {
 
 #ifdef CHERI_MERGED_RF
-      fprintf(stderr, "%-4s: 0x%016" PRIx64 "  ", xpr_name[r], p->get_state()->XPR[r].cursor);
+      fprintf(stderr, "%-4s: 0x%016" PRIx64 "  ", xpr_name[r], p->get_state()->XPR[r].cursor());
 #else //CHERI_MERGED_RF
       fprintf(stderr, "%-4s: 0x%016" PRIx64 "  ", xpr_name[r], p->get_state()->XPR[r]);
 #endif //CHERI_MERGED_RF
@@ -365,9 +365,9 @@ static void print_creg(cheri_reg_t creg, const char *name)
          " b:%016" PRIx64 " l:%1" PRIx64 "%016" PRIx64 " c:%016" PRIx64
          " t:%08" PRIx32 "\n",
          creg.tag, creg.flags,
-         (((uint64_t)creg.uperms << CHERI_PERM_BITS) | creg.perms), creg.base,
-         (uint64_t)(creg.length >> 64), (uint64_t)(creg.length & UINT64_MAX),
-         creg.cursor, creg.otype);
+         (((uint64_t)creg.uperms << CHERI_PERM_BITS) | creg.perms), creg.base(),
+         (uint64_t)(creg.length() >> 64), (uint64_t)(creg.length() & UINT64_MAX),
+         creg.cursor(), creg.otype);
 }
 
 #ifdef ENABLE_CHERI

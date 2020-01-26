@@ -35,6 +35,7 @@
 #define _RISCV_CHERI_TYPES_H
 
 #include <config.h>
+#include <stdint.h>
 
 /* Use __uint128 to represent 65 bit length */
 __extension__ typedef unsigned __int128 cheri_length_t;
@@ -47,12 +48,29 @@ __extension__ typedef unsigned __int128 cheri_length_t;
 #define OTYPE_UNSEALED 0x3ffffu
 #define OTYPE_MAX 0x3ffff
 
-struct cheri_reg_t {
- public:
-  uint64_t base;
-  cheri_length_t length;
-  uint64_t cursor;
+#define MAX_CHERI_LENGTH ((cheri_length_t)1u << 64)
 
+/* CHERI compressed format in memory */
+struct cheri_reg_inmem_t {
+ public:
+  uint64_t cursor;
+  uint64_t pesbt;
+};
+
+struct cap_register;
+
+struct cheri_reg_t {
+ private:
+  /* Cached; must go through mutation functions */
+  uint64_t _base;
+  cheri_length_t _top;
+  /* Uncached, but affects cached values */
+  uint64_t _cursor;
+
+  struct cap_register cap_lib() const;
+  void set_cap_lib(const struct cap_register &cap);
+
+ public:
   uint32_t flags  : 1;
   uint32_t uperms : CHERI_USER_PERM_BITS;
   uint32_t perms  : CHERI_PERM_BITS;
@@ -61,39 +79,58 @@ struct cheri_reg_t {
   uint32_t reserved : 8;
   uint32_t tag      : 1;
 
+  cheri_reg_t(const cheri_reg_t&) = default;
+  cheri_reg_t(cheri_reg_t&&) = default;
+  cheri_reg_t(const cheri_reg_inmem_t &inmem, bool tag);
+
+  cheri_reg_t& operator=(const cheri_reg_t&) = default;
+  cheri_reg_t& operator=(cheri_reg_t&&) = default;
+
+  uint64_t base() const { return _base; }
+  cheri_length_t top() const { return _top; }
+  uint64_t cursor() const { return _cursor; }
+
+  uint64_t offset() const { return _cursor - _base; }
+  cheri_length_t length() const { return _top - _base; }
   bool sealed() const { return otype != OTYPE_UNSEALED; }
+
+  cheri_reg_inmem_t inmem() const;
+  void set_bounds(uint64_t base, cheri_length_t top);
+  void set_cursor(uint64_t cursor);
+  void inc_offset(uint64_t inc) {
+    set_cursor(_cursor + inc);
+  }
+  void set_offset(uint64_t offset) {
+    set_cursor(_base + offset);
+  }
+
+  cheri_reg_t(uint64_t cursor = 0) {
+    _base    = 0;
+    _top     = MAX_CHERI_LENGTH;
+    _cursor  = cursor;
+    flags    = 0;
+    uperms   = 0;
+    perms    = 0;
+    otype    = OTYPE_UNSEALED;
+    reserved = 0;
+    tag      = 0;
+  }
+
+  static cheri_reg_t almighty(uint64_t cursor = 0) {
+    cheri_reg_t ret;
+    ret._base    = 0;
+    ret._top     = MAX_CHERI_LENGTH;
+    ret._cursor  = cursor;
+    ret.flags    = 0;
+    ret.uperms   = (1 << CHERI_USER_PERM_BITS) - 1;
+    ret.perms    = (1 << CHERI_PERM_BITS) - 1;
+    ret.otype    = OTYPE_UNSEALED;
+    ret.reserved = 0;
+    ret.tag      = 1;
+    return ret;
+  }
 };
 
-#define MAX_CHERI_LENGTH ((cheri_length_t)1u << 64)
-
-#define CHERI_NULL_CAP (cheri_reg_t) { \
-  .base     = 0,                       \
-  .length   = MAX_CHERI_LENGTH,      \
-  .cursor   = 0,                       \
-  .flags    = 0,                       \
-  .uperms   = 0,                       \
-  .perms    = 0,                       \
-  .otype    = OTYPE_UNSEALED,          \
-  .reserved = 0,                       \
-  .tag      = 0                        \
-}
-
-#define CHERI_ALMIGHTY_CAP (cheri_reg_t) { \
-  .base     = 0,                           \
-  .length   = MAX_CHERI_LENGTH,          \
-  .cursor   = 0,                           \
-  .flags    = 0,                           \
-  .uperms   = 0xfu,                        \
-  .perms    = 0xfffu,                      \
-  .otype    = OTYPE_UNSEALED,              \
-  .reserved = 0,                           \
-  .tag      = 1                            \
-}
-
-/* CHERI compressed format in memory */
-struct cheri_reg_inmem_t {
- public:
-  uint64_t cursor;
-  uint64_t pesbt;
-};
+#define CHERI_NULL_CAP (cheri_reg_t())
+#define CHERI_ALMIGHTY_CAP (cheri_reg_t::almighty())
 #endif

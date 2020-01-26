@@ -1,30 +1,40 @@
 // See LICENSE_CHERI for license details.
 
-long unsigned int new_pc = CS2.cursor;
-new_pc &= ~1;
+reg_t new_pc = CS1.cursor() & ~(reg_t(1));
+reg_t min_insn_bytes = p->supports_extension('C') ? 2 : 4;
 
-if (!CS2.tag) CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cd());
-else if (!CS1.tag) CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
-else if (!CS2.sealed()) CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cd());
-else if (!CS1.sealed()) CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
-else if (CS2.otype != CS1.otype) CHERI->raise_trap(CAUSE_CHERI_TYPE_FAULT, insn.cd());
-else if (!(CS1.perms & BIT(CHERI_PERMIT_CCALL))) CHERI->raise_trap(CAUSE_CHERI_PERMIT_CCALL_FAULT, insn.cs1());
-else if (!(CS2.perms & BIT(CHERI_PERMIT_CCALL))) CHERI->raise_trap(CAUSE_CHERI_PERMIT_CCALL_FAULT, insn.cs2());
-else if (!(CS2.perms & BIT(CHERI_PERMIT_EXECUTE))) CHERI->raise_trap(CAUSE_CHERI_PERMIT_EXECUTE_FAULT, insn.cd());
-else if ((CS1.perms & BIT(CHERI_PERMIT_EXECUTE))) CHERI->raise_trap(CAUSE_CHERI_PERMIT_EXECUTE_FAULT, insn.cs1());
-else if (new_pc < CS2.base) CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cd());
-else if (new_pc + 2 > CS2.base + CS2.length) CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cd()); // 2 needs to be 4 if not compressed
-else {
-  #if DEBUG
-  printf("CHERI: CCall wants to jump to %lu\n", new_pc);
-  #endif
-  cheri_reg_t CS2_tmp = CS2;
-  CS2_tmp.cursor = new_pc; //TODO think about overflow and alignment (otherwise this could be unrepresentable)
-  SET_SCR(CHERI_SCR_PCC, CS2_tmp);
+if (!CS1.tag) {
+  CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
+} else if (!CS2.tag) {
+  CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs2());
+} else if (!CS1.sealed()) {
+  CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
+} else if (!CS2.sealed()) {
+  CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs2());
+} else if (CS1.otype != CS2.otype) {
+  CHERI->raise_trap(CAUSE_CHERI_TYPE_FAULT, insn.cs1());
+} else if (!(CS1.perms & BIT(CHERI_PERMIT_CCALL))) {
+  CHERI->raise_trap(CAUSE_CHERI_PERMIT_CCALL_FAULT, insn.cs1());
+} else if (!(CS2.perms & BIT(CHERI_PERMIT_CCALL))) {
+  CHERI->raise_trap(CAUSE_CHERI_PERMIT_CCALL_FAULT, insn.cs2());
+} else if (!(CS1.perms & BIT(CHERI_PERMIT_EXECUTE))) {
+  CHERI->raise_trap(CAUSE_CHERI_PERMIT_EXECUTE_FAULT, insn.cs1());
+} else if (CS2.perms & BIT(CHERI_PERMIT_EXECUTE)) {
+  CHERI->raise_trap(CAUSE_CHERI_PERMIT_EXECUTE_FAULT, insn.cs2());
+} else if (new_pc < CS1.base()) {
+  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
+} else if (new_pc + min_insn_bytes > CS1.top()) {
+  CHERI->raise_trap(CAUSE_CHERI_LENGTH_FAULT, insn.cs1());
+} else if (CS1.base() & ~p->pc_alignment_mask()) {
+  CHERI->raise_trap(CAUSE_CHERI_UNALIGNED_BASE, insn.cs1());
+} else if (new_pc & ~p->pc_alignment_mask()) {
+  throw trap_instruction_address_misaligned(new_pc);
+} else {
   set_pc(new_pc);
+  SET_SCR(CHERI_SCR_PCC, CS1);
 
   /* IDC */
-  cheri_reg_t CS1_tmp = CS1;
-  CS1_tmp.otype = OTYPE_UNSEALED;
-  WRITE_CREG(31, CS1_tmp); //TODO define IDC=31 elsewhere
+  cheri_reg_t idc = CS2;
+  idc.otype = OTYPE_UNSEALED;
+  WRITE_CREG(31, idc); // TODO: define IDC=31 elsewhere
 }

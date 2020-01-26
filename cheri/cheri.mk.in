@@ -6,6 +6,7 @@ get_opcode = $(shell grep ^DECLARE_INSN.*\\\<$(2)\\\> $(1) | sed 's/DECLARE_INSN
 cheri_hdrs = \
 	cheri.h \
 	cheri_trap.h \
+	cheri_types.h \
 	cheri_insn_template.h \
 
 cheri_gen_hdrs = \
@@ -15,12 +16,12 @@ cheri_precompiled_hdrs = \
 	insn_template.h \
 
 cheri_srcs = \
-	dummy_cheri.cc \
 	cheri.cc \
+	cheri_types.cc \
 	$(cheri_gen_srcs)\
 
 cheri_insn_list = \
-  csetaddr \
+	csetaddr \
 	csetoffset \
 	csetflags \
 	cgetperm \

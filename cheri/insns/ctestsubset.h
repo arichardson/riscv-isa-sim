@@ -4,8 +4,8 @@ cheri_reg_t tmp = (insn.cs1() == 0)? DDC : CS1;
 
 if (
   tmp.tag != CS2.tag ||
-  CS2.base < tmp.base ||
-  CS2.length > tmp.length ||
+  CS2.base() < tmp.base() ||
+  CS2.top() > tmp.top() ||
   (CS2.perms & tmp.perms) != CS2.perms
 ) {
   WRITE_RD(0);

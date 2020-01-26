@@ -38,7 +38,7 @@
 
 #include "extension.h"
 #include "cheri_trap.h"
-#include "cheri-compressed-cap/cheri_compressed_cap.h"
+#include "cheri_types.h"
 #include "mmu.h"
 #include "tags.h"
 
@@ -68,11 +68,11 @@
   cheri_reg_t wdata = (val); /* val may have side effects */ \
   STATE.XPR.write(insn.cd(), wdata); \
   if (p->rvfi_dii && (insn.cd() != 0)) { \
-    p->rvfi_dii_output.rvfi_dii_rd_wdata = wdata.cursor; \
+    p->rvfi_dii_output.rvfi_dii_rd_wdata = wdata.cursor(); \
     p->rvfi_dii_output.rvfi_dii_rd_addr = insn.cd(); \
   } \
   if(DEBUG) { \
-    fprintf(stderr, "x%lu <- t:%u s:%u perms:0x%08x type:0x%016x cursor:0x%016lx base:0x%016lx length:0x%1lx%016lx\n", insn.cd(), wdata.tag, wdata.sealed(), wdata.perms, wdata.otype, wdata.cursor, wdata.base, (uint64_t) (wdata.length >> 64), (uint64_t) wdata.length & UINT64_MAX); \
+    fprintf(stderr, "x%lu <- t:%u s:%u perms:0x%08x type:0x%016x cursor:0x%016lx base:0x%016lx length:0x%1lx%016lx\n", insn.cd(), wdata.tag, wdata.sealed(), wdata.perms, wdata.otype, wdata.cursor(), wdata.base(), (uint64_t) (wdata.length() >> 64), (uint64_t) wdata.length() & UINT64_MAX); \
   } \
 })
 # define READ_CREG(reg) STATE.XPR[reg]
@@ -101,19 +101,18 @@ struct cheri_state {
 
 typedef struct cheri_state cheri_state_t;
 
-void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source);
-
-void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source);
-
-bool cheri_is_representable(uint32_t sealed, uint64_t base, cheri_length_t length, uint64_t old_cursor, uint64_t new_cursor);
-
 class cheri_t : public extension_t {
  public:
 
   cheri_t() {
+    printf("CHERI Extension is Enabled..\n");
   }
 
   ~cheri_t() {
+  }
+
+  const char* name() {
+    return "cheri";
   }
 
   /* Override extension functions */
@@ -123,12 +122,12 @@ class cheri_t : public extension_t {
 
   reg_t from_arch_pc(reg_t pc) {
     cheri_reg_t pcc = state.scrs_reg_file[CHERI_SCR_PCC];
-    return pc + pcc.base;
+    return pc + pcc.base();
   }
 
   reg_t to_arch_pc(reg_t pc) {
     cheri_reg_t pcc = state.scrs_reg_file[CHERI_SCR_PCC];
-    return pc - pcc.base;
+    return pc - pcc.base();
   }
 
   void check_ifetch_granule(reg_t start_addr, reg_t addr) {
@@ -136,7 +135,7 @@ class cheri_t : public extension_t {
     reg_t authidx = 0x20 | CHERI_SCR_PCC;
     /* We can skip everything but bounds for granules other than the first. */
     if (start_addr == addr) {
-      reg_t offset = addr - auth.cursor;
+      reg_t offset = addr - auth.cursor();
       memop_to_addr(auth, authidx, offset, 2, /*load=*/false, /*store=*/false,
                     /*execute=*/true, /*cap_op=*/false, /*store_local=*/false);
     } else {
@@ -181,8 +180,7 @@ class cheri_t : public extension_t {
 
   void check_in_bounds(cheri_reg_t auth, reg_t authidx, reg_t addr,
                        reg_t len) {
-    if (addr < auth.base || addr + len > auth.base + auth.length ||
-        addr + len < addr) {
+    if (addr < auth.base() || addr + (cheri_length_t)len > auth.top()) {
       raise_trap(CAUSE_CHERI_LENGTH_FAULT, authidx);
     }
   }
@@ -202,7 +200,7 @@ class cheri_t : public extension_t {
     // Check that we never execute capabilities.
     assert(!(execute && cap_op));
 
-    reg_t addr = auth.cursor + offset;
+    reg_t addr = auth.cursor() + offset;
     if (!auth.tag) {
       raise_trap(CAUSE_CHERI_TAG_FAULT, authidx);
     } else if (auth.sealed()) {
@@ -255,13 +253,9 @@ class cheri_t : public extension_t {
                     /*store_local=*/false);
     reg_t paddr;
     cheri_reg_inmem_t inmem = MMU.load_cheri_reg_inmem(addr, &paddr);
-    cheri_reg_t ret;
-    cap_register_t converted;
-    decompress_128cap(inmem.pesbt, inmem.cursor, &converted);
-    retrieveCheriReg(&ret, &converted);
-    ret.tag = (auth.perms & BIT(CHERI_PERMIT_LOAD_CAPABILITY)) &&
-              get_tag_translated(paddr);
-    return ret;
+    bool tag = (auth.perms & BIT(CHERI_PERMIT_LOAD_CAPABILITY)) &&
+               get_tag_translated(paddr);
+    return cheri_reg_t(inmem, tag);
   }
 
   inline cheri_reg_t ddc_load_cap(reg_t addr) {
@@ -301,13 +295,8 @@ class cheri_t : public extension_t {
       memop_to_addr(auth, authidx, offset, sizeof(cheri_reg_inmem_t),
                     /*load=*/false, /*store=*/true, /*execute=*/false,
                     /*cap_op=*/true, store_local);
-    cheri_reg_inmem_t inmem;
-    cap_register_t converted;
-    convertCheriReg(&converted, &val);
-    inmem.pesbt = compress_128cap(&converted);
-    inmem.cursor = converted.address();
     reg_t paddr;
-    MMU.store_cheri_reg_inmem(addr, inmem, &paddr);
+    MMU.store_cheri_reg_inmem(addr, val.inmem(), &paddr);
     set_tag_translated(paddr, val.tag);
   }
 
