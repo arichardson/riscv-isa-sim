@@ -46,8 +46,9 @@ __extension__ typedef unsigned __int128 cheri_length_t;
 #define CHERI_USER_PERM_SHIFT 15
 #define CHERI_PERM_BITS       12
 
+#define OTYPE_RESERVED_COUNT 1
 #define OTYPE_UNSEALED 0x3ffffu
-#define OTYPE_MAX 0x3ffff
+#define OTYPE_MAX (0x3ffffu - OTYPE_RESERVED_COUNT)
 
 #define MAX_CHERI_LENGTH ((cheri_length_t)1u << 64)
 
