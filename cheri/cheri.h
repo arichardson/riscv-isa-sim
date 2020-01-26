@@ -165,7 +165,7 @@ class cheri_t : public extension_t {
   };
 
   void raise_trap(reg_t trap_code, reg_t trap_reg) {
-    set_ccsr((trap_code << 8) | trap_reg);
+    set_ccsr((trap_reg << 10) | (trap_code << 5));
     throw trap_cheri_trap();
   };
 
