@@ -3,7 +3,7 @@
 if (!CS1.tag) {
   CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs1());
 } else if (!CS2.tag || CS2.otype == OTYPE_UNSEALED) {
-  CHERI->raise_trap(CAUSE_CHERI_TAG_FAULT, insn.cs2());
+  WRITE_CD(CS1);
 } else if (CS1.sealed()) {
   CHERI->raise_trap(CAUSE_CHERI_SEAL_FAULT, insn.cs1());
 } else if (CS2.sealed()) {
