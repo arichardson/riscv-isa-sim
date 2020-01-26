@@ -61,6 +61,7 @@ void convertCheriReg(cap_register_t *destination, const cheri_reg_t *source) {
   destination->cr_uperms        = source->uperms;
   destination->cr_otype         = source->otype;
   destination->cr_flags         = source->flags;
+  destination->cr_reserved      = source->reserved;
   destination->cr_tag           = source->tag;
 }
 
@@ -72,6 +73,7 @@ void retrieveCheriReg(cheri_reg_t *destination, const cap_register_t *source) {
   destination->uperms = source->cr_uperms;
   destination->otype  = source->cr_otype;
   destination->flags  = source->cr_flags;
+  destination->reserved = source->cr_reserved;
   destination->tag    = source->cr_tag;
 }
 
