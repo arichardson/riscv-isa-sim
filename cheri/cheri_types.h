@@ -63,11 +63,14 @@ struct cap_register;
 
 struct cheri_reg_t {
  private:
+  static const uint32_t reset_ebt;
+
   /* Cached; must go through mutation functions */
   uint64_t _base;
   cheri_length_t _top;
   /* Uncached, but affects cached values */
   uint64_t _cursor;
+  uint32_t _ebt;
 
   struct cap_register cap_lib() const;
   void set_cap_lib(const struct cap_register &cap);
@@ -110,6 +113,7 @@ struct cheri_reg_t {
     _base    = 0;
     _top     = MAX_CHERI_LENGTH;
     _cursor  = cursor;
+    _ebt     = reset_ebt;
     flags    = 0;
     uperms   = 0;
     perms    = 0;
@@ -123,6 +127,7 @@ struct cheri_reg_t {
     ret._base    = 0;
     ret._top     = MAX_CHERI_LENGTH;
     ret._cursor  = cursor;
+    ret._ebt     = reset_ebt;
     ret.flags    = 0;
     ret.uperms   = (1 << CHERI_USER_PERM_BITS) - 1;
     ret.perms    = (1 << CHERI_PERM_BITS) - 1;

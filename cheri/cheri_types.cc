@@ -45,6 +45,7 @@ struct cap_register cheri_reg_t::cap_lib() const {
   cap.cr_perms         = perms;
   cap.cr_uperms        = uperms;
   cap.cr_otype         = otype;
+  cap.cr_ebt           = _ebt;
   cap.cr_flags         = flags;
   cap.cr_reserved      = reserved;
   cap.cr_tag           = tag;
@@ -57,6 +58,7 @@ void cheri_reg_t::set_cap_lib(const struct cap_register &cap) {
   _top     = cap._cr_top;
   perms    = cap.cr_perms;
   uperms   = cap.cr_uperms;
+  _ebt     = cap.cr_ebt;
   otype    = cap.cr_otype;
   flags    = cap.cr_flags;
   reserved = cap.cr_reserved;
@@ -79,14 +81,12 @@ cheri_reg_inmem_t cheri_reg_t::inmem() const {
 }
 
 void cheri_reg_t::set_bounds(uint64_t new_base, cheri_length_t new_top) {
-  reserved = 0;
   struct cap_register cap = cap_lib();
   cc128_setbounds(&cap, new_base, new_top);
   set_cap_lib(cap);
 }
 
 void cheri_reg_t::set_cursor(uint64_t new_cursor) {
-  reserved = 0;
   if (!cc128_is_representable_new_addr(sealed(), base(), length(), cursor(), new_cursor)) {
     cheri_reg_inmem_t newmem = inmem();
     newmem.cursor = new_cursor;
@@ -95,4 +95,6 @@ void cheri_reg_t::set_cursor(uint64_t new_cursor) {
     _cursor = new_cursor;
   }
 }
+
+const uint32_t cheri_reg_t::reset_ebt = CC128_RESET_EBT;
 #endif
