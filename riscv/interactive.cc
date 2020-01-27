@@ -135,7 +135,7 @@ void sim_t::interactive_help(const std::string& cmd, const std::vector<std::stri
     "until reg <core> <reg> <val>    # Stop when <reg> in <core> hits <val>\n"
     "until pc <core> <val>           # Stop when PC in <core> hits <val>\n"
     "until [m|s]int <core> <val>     # Stop when an interrupt <val> get triggered in <core> in [s|m] mode\n"
-    "until [m|s]sexc <core> <val>    # Stop when an exception <val> get triggered in <core> in [s|m] mode\n"
+    "until [m|s]exc <core> <val>     # Stop when an exception <val> get triggered in <core> in [s|m] mode\n"
     "untiln pc <core> <val>          # Run noisy and stop when PC in <core> hits <val>\n"
     "until mem [core] <addr> <val>   # Stop when memory <addr> becomes <val>\n"
     "while reg <core> <reg> <val>    # Run while <reg> in <core> is <val>\n"
@@ -497,7 +497,7 @@ void sim_t::interactive_until(const std::string& cmd, const std::vector<std::str
               args[0] == "mint" ? &sim_t::get_pc :
               args[0] == "mexc" ? &sim_t::get_pc :
               args[0] == "sint" ? &sim_t::get_pc :
-              args[0] == "mexc" ? &sim_t::get_pc :
+              args[0] == "sexc" ? &sim_t::get_pc :
               NULL;
 
   if (func == NULL)
@@ -519,9 +519,9 @@ void sim_t::interactive_until(const std::string& cmd, const std::vector<std::str
       if (cmd_until) {
         if (current == val)
           break;
-        if (until_mtrap && (current == mtvec) && (val == mcause) && args[0] =="mexc")
+        if (until_mtrap && (current == mtvec) && (val == (mcause & 0xff)) && args[0] == "mexc" && !(mcause >> (p->get_xlen()-1)))
           break;
-        if (until_strap && (current == stvec) && (val == scause) && args[0] =="sexc")
+        if (until_strap && (current == stvec) && (val == (scause & 0xff)) && args[0] == "sexc" && !(scause >> (p->get_xlen()-1)))
           break;
         if (until_mtrap && (current == mtvec) && (val == (mcause & 0xff)) && args[0] == "mint" && (mcause >> (p->get_xlen()-1)))
           break;
