@@ -364,38 +364,6 @@ public:
     return entry;
   }
 
-  inline insn_bits_t get_insn(reg_t addr)
-  {
-    auto *ext = proc->get_extension();
-    if (ext) ext->check_ifetch_granule(addr, addr);
-
-    auto tlb_entry = translate_insn_addr(addr);
-    insn_bits_t insn = *(uint16_t*)(tlb_entry.host_offset + addr);
-    int length = insn_length(insn);
-
-    if (likely(length == 4)) {
-      if (ext) ext->check_ifetch_granule(addr, addr + 2);
-      insn |= (insn_bits_t)from_le(*(const int16_t*)translate_insn_addr_to_host(addr + 2)) << 16;
-    } else if (length == 2) {
-      insn = (int16_t)insn;
-    } else if (length == 6) {
-      insn |= (insn_bits_t)from_le(*(const uint16_t*)translate_insn_addr_to_host(addr + 2)) << 16;
-      if (ext) ext->check_ifetch_granule(addr, addr + 2);
-      insn |= (insn_bits_t)from_le(*(const int16_t*)translate_insn_addr_to_host(addr + 4)) << 32;
-      if (ext) ext->check_ifetch_granule(addr, addr + 4);
-    } else {
-      static_assert(sizeof(insn_bits_t) == 8, "insn_bits_t must be uint64_t");
-      insn |= (insn_bits_t)from_le(*(const uint16_t*)translate_insn_addr_to_host(addr + 2)) << 16;
-      if (ext) ext->check_ifetch_granule(addr, addr + 2);
-      insn |= (insn_bits_t)from_le(*(const uint16_t*)translate_insn_addr_to_host(addr + 4)) << 32;
-      if (ext) ext->check_ifetch_granule(addr, addr + 4);
-      insn |= (insn_bits_t)from_le(*(const int16_t*)translate_insn_addr_to_host(addr + 6)) << 48;
-      if (ext) ext->check_ifetch_granule(addr, addr + 6);
-    }
-
-    return insn;
-  }
-
   inline icache_entry_t* access_icache(reg_t addr)
   {
     icache_entry_t* entry = &icache[icache_index(addr)];
@@ -506,6 +474,30 @@ private:
     return (uint16_t*)(translate_insn_addr(addr).host_offset + addr);
   }
 
+  // Bypasses extension's check_ifetch_granule for use by a debugger!
+  inline insn_bits_t get_insn(reg_t addr)
+  {
+    auto tlb_entry = translate_insn_addr(addr);
+    insn_bits_t insn = *(uint16_t*)(tlb_entry.host_offset + addr);
+    int length = insn_length(insn);
+
+    if (likely(length == 4)) {
+      insn |= (insn_bits_t)from_le(*(const int16_t*)translate_insn_addr_to_host(addr + 2)) << 16;
+    } else if (length == 2) {
+      insn = (int16_t)insn;
+    } else if (length == 6) {
+      insn |= (insn_bits_t)from_le(*(const uint16_t*)translate_insn_addr_to_host(addr + 2)) << 16;
+      insn |= (insn_bits_t)from_le(*(const int16_t*)translate_insn_addr_to_host(addr + 4)) << 32;
+    } else {
+      static_assert(sizeof(insn_bits_t) == 8, "insn_bits_t must be uint64_t");
+      insn |= (insn_bits_t)from_le(*(const uint16_t*)translate_insn_addr_to_host(addr + 2)) << 16;
+      insn |= (insn_bits_t)from_le(*(const uint16_t*)translate_insn_addr_to_host(addr + 4)) << 32;
+      insn |= (insn_bits_t)from_le(*(const int16_t*)translate_insn_addr_to_host(addr + 6)) << 48;
+    }
+
+    return insn;
+  }
+
   inline trigger_matched_t *trigger_exception(trigger_operation_t operation,
       reg_t address, reg_t data)
   {
@@ -531,6 +523,7 @@ private:
   trigger_matched_t *matched_trigger;
 
   friend class processor_t;
+  friend class sim_t;
 };
 
 struct vm_info {

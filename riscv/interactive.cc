@@ -82,6 +82,7 @@ void sim_t::interactive()
   funcs["pc"] = &sim_t::interactive_pc;
   funcs["mem"] = &sim_t::interactive_mem;
   funcs["str"] = &sim_t::interactive_str;
+  funcs["dis"] = &sim_t::interactive_dis;
   funcs["until"] = &sim_t::interactive_until_silent;
   funcs["untiln"] = &sim_t::interactive_until_noisy;
   funcs["while"] = &sim_t::interactive_until_silent;
@@ -132,6 +133,7 @@ void sim_t::interactive_help(const std::string& cmd, const std::vector<std::stri
     "pc <core>                       # Show current PC in <core>\n"
     "mem [core] <hex addr>           # Show contents of memory (physical if [core] omitted)\n"
     "str [core] <hex addr>           # Show NUL-terminated C string\n"
+    "dis <core> <hex addr> [count]   # Disassemble [count] (1 if omitted) instructions\n"
     "until reg <core> <reg> <val>    # Stop when <reg> in <core> hits <val>\n"
     "until pc <core> <val>           # Stop when PC in <core> hits <val>\n"
     "until [m|s]int <core> <val>     # Stop when an interrupt <val> get triggered in <core> in [s|m] mode\n"
@@ -462,6 +464,31 @@ void sim_t::interactive_str(const std::string& cmd, const std::vector<std::strin
     putchar(ch);
 
   putchar('\n');
+}
+
+void sim_t::interactive_dis(const std::string& cmd, const std::vector<std::string>& args)
+{
+  if (args.size() != 2 && args.size() != 3)
+    throw trap_interactive();
+
+  processor_t *p = get_core(args[0]);
+  mmu_t* mmu = p->get_mmu();
+
+  reg_t addr = strtol(args[1].c_str(),NULL,16);
+  if (addr == LONG_MAX)
+    addr = strtoul(args[1].c_str(),NULL,16);
+
+  unsigned long count = 1;
+  if (args.size() == 3)
+    count = strtoul(args[2].c_str(), NULL, 10);
+
+  for (; count > 0; --count) {
+    insn_bits_t insn = mmu->get_insn(addr);
+    uint64_t bits = insn & ((1ULL << (8 * insn_length(insn))) - 1);
+    fprintf(stderr, "0x%016" PRIx64 " (0x%08" PRIx64 ") %s\n",
+            addr, bits, p->get_disassembler()->disassemble(insn).c_str());
+    addr += insn_length(insn);
+  }
 }
 
 void sim_t::interactive_until_silent(const std::string& cmd, const std::vector<std::string>& args)
