@@ -24,7 +24,7 @@ if (!CS1.tag) {
    * instruction is just out of bounds but still representable. */
   assert(link.tag);
 
-  set_pc(new_pc);
+  set_pc(CHERI->to_arch_pc(new_pc));
   SET_SCR(CHERI_SCR_PCC, CS1);
   /* Must come after write to PCC in case CD == CS1 */
   WRITE_CD(link);
