@@ -31,21 +31,13 @@
  * SUCH DAMAGE.
  */
 
-#ifdef CHERI_MERGED_RF
-if (xlen == 32) { /* sc */
-  if (CHERI->get_mode()) {
-    CHERI->cap_store_cap(CS1, insn.cs1(), insn.s_imm(), CS2);
-  } else {
-    CHERI->ddc_store_cap(RS1 + insn.s_imm(), CS2);
-  }
-} else {
-  if (CHERI->get_mode()) {
-    CHERI->cap_store_uint64(CS1, insn.cs1(), insn.s_imm(), RS2);
-  } else {
-    CHERI->ddc_store_uint64(RS1 + insn.s_imm(), RS2);
-  }
-}
-#else
+#ifndef CHERI_MERGED_RF
 require_rv64;
-MMU.store_uint64(RS1 + insn.s_imm(), RS2);
+#else
+if (xlen == 32) { /* sc */
+  CHERI_MODE_STORE(cap, insn.rs1(), insn.s_imm(), CS2);
+} else
 #endif
+{
+  CHERI_MODE_STORE(uint64, insn.rs1(), insn.s_imm(), RS2);
+}

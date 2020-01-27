@@ -32,12 +32,4 @@
  */
 
 require_rv64;
-#ifdef CHERI_MERGED_RF
-if (CHERI->get_mode()) {
-  WRITE_RD(CHERI->cap_load_uint32(CS1, insn.cs1(), insn.i_imm()));
-} else {
-  WRITE_RD(CHERI->ddc_load_uint32(RS1 + insn.i_imm()));
-}
-#else
-WRITE_RD(MMU.load_uint32(RS1 + insn.i_imm()));
-#endif
+WRITE_RD(CHERI_MODE_LOAD(uint32, insn.rs1(), insn.i_imm()));

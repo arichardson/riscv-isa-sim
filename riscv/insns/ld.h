@@ -32,21 +32,13 @@
  */
 
 
-#ifdef CHERI_MERGED_RF
-if (xlen == 32) { /* lc */
-  if (CHERI->get_mode()) {
-    WRITE_CD(CHERI->cap_load_cap(CS1, insn.cs1(), insn.i_imm()));
-  } else {
-    WRITE_CD(CHERI->ddc_load_cap(RS1 + insn.i_imm()));
-  }
-} else {
-  if (CHERI->get_mode()) {
-    WRITE_RD(CHERI->cap_load_int64(CS1, insn.cs1(), insn.i_imm()));
-  } else {
-    WRITE_RD(CHERI->ddc_load_int64(RS1 + insn.i_imm()));
-  }
-}
-#else
+#ifndef CHERI_MERGED_RF
 require_rv64;
-WRITE_RD(MMU.load_int64(RS1 + insn.i_imm()));
+#else
+if (xlen == 32) { /* lc */
+  WRITE_CD(CHERI_MODE_LOAD(cap, insn.rs1(), insn.i_imm()));
+} else
 #endif
+{
+  WRITE_RD(CHERI_MODE_LOAD(int64, insn.rs1(), insn.i_imm()));
+}

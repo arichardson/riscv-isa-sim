@@ -31,12 +31,4 @@
  * SUCH DAMAGE.
  */
 
-#ifdef CHERI_MERGED_RF
-if (CHERI->get_mode()) {
-  WRITE_RD(CHERI->cap_load_int32(CS1, insn.cs1(), insn.i_imm()));
-} else {
-  WRITE_RD(CHERI->ddc_load_int32(RS1 + insn.i_imm()));
-}
-#else
-WRITE_RD(MMU.load_int32(RS1 + insn.i_imm()));
-#endif
+WRITE_RD(CHERI_MODE_LOAD(int32, insn.rs1(), insn.i_imm()));

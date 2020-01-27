@@ -207,8 +207,24 @@ private:
 
 #ifdef CHERI_MERGED_RF
 #define READ_REG(reg) STATE.XPR[reg].cursor()
+#define CHERI_MODE_LOAD(type, reg, imm) ({ \
+    uint64_t regtmp = reg; /* value may have side effects */ \
+    CHERI->get_mode() \
+      ? CHERI->cap_load_##type(READ_CREG(regtmp), (regtmp), (imm)) \
+      : CHERI->ddc_load_##type(READ_REG(regtmp) + (imm)); \
+  })
+#define CHERI_MODE_STORE(type, reg, imm, val) ({ \
+    uint64_t regtmp = reg; /* value may have side effects */ \
+    CHERI->get_mode() \
+      ? CHERI->cap_store_##type(READ_CREG(regtmp), (regtmp), (imm), (val)) \
+      : CHERI->ddc_store_##type(READ_REG(regtmp) + (imm), (val)); \
+  })
 #else //CHERI_MERGED_RF
 #define READ_REG(reg) STATE.XPR[reg]
+#define CHERI_MODE_LOAD(type, reg, imm) \
+  MMU.load_##type(READ_REG(reg) + imm)
+#define CHERI_MODE_STORE(type, reg, imm, val) \
+  MMU.store_##type(READ_REG(reg) + imm, (val))
 #endif //CHERI_MERGED_RF
 
 #define READ_FREG(reg) STATE.FPR[reg]
