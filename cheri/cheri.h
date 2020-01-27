@@ -214,6 +214,8 @@ class cheri_t : public extension_t {
     } else if (store && store_local &&
                !(auth.perms & BIT(CHERI_PERMIT_STORE_LOCAL_CAPABILITY))) {
       raise_trap(CAUSE_CHERI_PERMIT_STORE_LOCAL_CAPABILITY_FAULT, authidx);
+    } else if (execute && !(auth.perms & BIT(CHERI_PERMIT_EXECUTE))) {
+      raise_trap(CAUSE_CHERI_PERMIT_EXECUTE_FAULT, authidx);
     }
     check_in_bounds(auth, authidx, addr, len);
     return addr;
