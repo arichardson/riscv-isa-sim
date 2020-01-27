@@ -13,7 +13,7 @@ if (!CS1.tag) {
 } else {
   cheri_reg_t cap = CS1;
   cap.set_bounds(CS1.cursor(), new_top);
-  if (cap.cursor() != CS1.cursor() || cap.top() != new_top) {
+  if (cap.base() != CS1.cursor() || cap.top() != new_top) {
     CHERI->raise_trap(CAUSE_CHERI_BOUNDS_FAULT, insn.cs1());
   } else {
     WRITE_CD(cap);
