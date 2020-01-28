@@ -332,6 +332,20 @@ private:
 #define sext_xlen(x) (((sreg_t)(x) << (64-xlen)) >> (64-xlen))
 #define zext_xlen(x) (((reg_t)(x) << (64-xlen)) >> (64-xlen))
 
+#define TO_ARCH_PC(x) ({ \
+    reg_t __to_arch_pc = (x); \
+    if (auto *ext = p->get_extension()) \
+      __to_arch_pc = ext->to_arch_pc(__to_arch_pc); \
+    __to_arch_pc; \
+  })
+
+#define FROM_ARCH_PC(x) ({ \
+    reg_t __from_arch_pc = (x); \
+    if (auto *ext = p->get_extension()) \
+      __from_arch_pc = ext->from_arch_pc(__from_arch_pc); \
+    __from_arch_pc; \
+  })
+
 #define set_pc(x) \
   do { p->check_pc_alignment(x); \
        npc = sext_xlen(x); \
@@ -339,7 +353,7 @@ private:
 
 #define set_pc_and_serialize(x) \
   do { reg_t __npc = (x) & p->pc_alignment_mask(); \
-       npc = PC_SERIALIZE_AFTER; \
+       npc = TO_ARCH_PC(PC_SERIALIZE_AFTER); \
        STATE.pc = __npc; \
      } while(0)
 
@@ -347,7 +361,7 @@ class wait_for_interrupt_t {};
 
 #define wfi() \
   do { set_pc_and_serialize(npc); \
-       npc = PC_SERIALIZE_WFI; \
+       npc = TO_ARCH_PC(PC_SERIALIZE_WFI); \
        throw wait_for_interrupt_t(); \
      } while(0)
 

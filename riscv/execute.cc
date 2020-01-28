@@ -174,7 +174,6 @@ void processor_t::step(size_t n, insn_t insn)
        } \
        pc = state.pc; \
        if (rvfi_dii) { \
-         auto *ext = get_extension(); \
          rvfi_dii_output.rvfi_dii_pc_wdata = ext ? ext->to_arch_pc(pc) : pc; \
        } \
        break; \
@@ -182,7 +181,6 @@ void processor_t::step(size_t n, insn_t insn)
        state.pc = pc; \
        instret++; \
        if (rvfi_dii) { \
-         auto *ext = get_extension(); \
          rvfi_dii_output.rvfi_dii_pc_wdata = ext ? ext->to_arch_pc(pc) : pc; \
        } \
      }
@@ -230,7 +228,6 @@ void processor_t::step(size_t n, insn_t insn)
 
             fetch = {decode_insn(insn), insn};
 
-            auto *ext = get_extension();
             rvfi_dii_output.rvfi_dii_insn = insn.bits();
 #ifdef CHERI_MERGED_RF
             rvfi_dii_output.rvfi_dii_rs1_data = state.XPR[insn.rs1()].cursor();

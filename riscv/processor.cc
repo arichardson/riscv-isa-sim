@@ -504,12 +504,10 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     deleg = state.mideleg, bit &= ~((reg_t)1 << (max_xlen-1));
   if (state.prv <= PRV_S && bit < max_xlen && ((deleg >> bit) & 1)) {
     // handle the trap in S-mode
-    reg_t vector = (state.stvec & 1) && interrupt ? 4*bit : 0;
-    state.pc = (state.stvec & ~(reg_t)1) + vector;
-    if (rvfi_dii) {
-      rvfi_dii_output.rvfi_dii_pc_wdata = state.pc; /* architectural! */
-    }
     state.scause = t.cause();
+    state.stval = t.get_tval();
+    // Before we have updated PCC
+    state.sepc = ext ? ext->to_arch_pc(epc) : epc;
 #ifdef ENABLE_CHERI
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
     state.sccsr = cheri->get_ccsr();
@@ -517,16 +515,14 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     sepcc.set_cursor(epc);
     cheri->state.scrs_reg_file.write(CHERI_SCR_SEPCC, sepcc);
     cheri->state.scrs_reg_file.write(CHERI_SCR_PCC, cheri->get_scr(CHERI_SCR_STCC, this));
-#if DEBUG
-    fprintf(stderr, "processor.cc: supervisor mode trap, PC is 0x%016lx\n", state.pc);
-#endif //DEBUG
 #endif /* ENABLE_CHERI */
-    if (auto *ext = get_extension()) {
-      state.pc = ext->from_arch_pc(state.pc);
-      epc = ext->to_arch_pc(epc);
+    // Must come after CHERI handling to ensure stvec uses new PCC not old
+    reg_t vector = (state.stvec & 1) && interrupt ? 4*bit : 0;
+    reg_t npc = (state.stvec & ~(reg_t)1) + vector;
+    state.pc = ext ? ext->from_arch_pc(npc) : npc;
+    if (rvfi_dii) {
+      rvfi_dii_output.rvfi_dii_pc_wdata = npc;
     }
-    state.sepc = epc;
-    state.stval = t.get_tval();
 
     reg_t s = state.mstatus;
     s = set_field(s, MSTATUS_SPIE, get_field(s, MSTATUS_SIE));
@@ -535,12 +531,11 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     set_csr(CSR_MSTATUS, s);
     set_privilege(PRV_S);
   } else {
-    reg_t vector = (state.mtvec & 1) && interrupt ? 4*bit : 0;
-    state.pc = (state.mtvec & ~(reg_t)1) + vector;
-    if (rvfi_dii) {
-      rvfi_dii_output.rvfi_dii_pc_wdata = state.pc; /* architectural! */
-    }
+    // handle the trap in M-mode
     state.mcause = t.cause();
+    state.mtval = t.get_tval();
+    // Before we have updated PCC
+    state.mepc = ext ? ext->to_arch_pc(epc) : epc;
 #ifdef ENABLE_CHERI
     cheri_t *cheri = (static_cast<cheri_t*>(get_extension()));
     state.mccsr = cheri->get_ccsr();
@@ -548,16 +543,14 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
     mepcc.set_cursor(epc);
     cheri->state.scrs_reg_file.write(CHERI_SCR_MEPCC, mepcc);
     cheri->state.scrs_reg_file.write(CHERI_SCR_PCC, cheri->get_scr(CHERI_SCR_MTCC, this));
-#if DEBUG
-    fprintf(stderr, "processor.cc: machine mode trap, PC is 0x%016lx\n", state.pc);
-#endif //DEBUG
 #endif /* ENABLE_CHERI */
-    if (auto *ext = get_extension()) {
-      state.pc = ext->from_arch_pc(state.pc);
-      epc = ext->to_arch_pc(epc);
+    // Must come after CHERI handling to ensure stvec uses new PCC not old
+    reg_t vector = (state.mtvec & 1) && interrupt ? 4*bit : 0;
+    reg_t npc = (state.mtvec & ~(reg_t)1) + vector;
+    state.pc = ext ? ext->from_arch_pc(npc) : npc;
+    if (rvfi_dii) {
+      rvfi_dii_output.rvfi_dii_pc_wdata = npc;
     }
-    state.mepc = epc;
-    state.mtval = t.get_tval();
 
     reg_t s = state.mstatus;
     s = set_field(s, MSTATUS_MPIE, get_field(s, MSTATUS_MIE));

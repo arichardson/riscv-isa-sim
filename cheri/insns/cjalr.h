@@ -19,7 +19,7 @@ if (!CS1.tag) {
   throw trap_instruction_address_misaligned(new_pc);
 } else {
   cheri_reg_t link = GET_SCR(CHERI_SCR_PCC);
-  link.set_cursor(CHERI->from_arch_pc(npc));
+  link.set_offset(npc);
   /* We were tagged and in bounds for this instruction, so at worst next
    * instruction is just out of bounds but still representable. */
   assert(link.tag);
