@@ -1,3 +1,3 @@
 require_extension('Q');
 require_fp;
-WRITE_FRD(MMU.load_float128(RS1 + insn.i_imm()));
+WRITE_FRD(CHERI_MODE_LOAD(float128, insn.rs1(), insn.i_imm()));

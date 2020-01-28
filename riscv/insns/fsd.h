@@ -1,3 +1,3 @@
 require_extension('D');
 require_fp;
-MMU.store_uint64(RS1 + insn.s_imm(), FRS2.v[0]);
+CHERI_MODE_STORE(uint64, insn.rs1(), insn.s_imm(), FRS2.v[0]);

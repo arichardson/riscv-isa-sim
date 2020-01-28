@@ -241,6 +241,7 @@ class cheri_t : public extension_t {
   load_func(int16)
   load_func(int32)
   load_func(int64)
+  load_func(float128)
   #undef load_func
 
   inline cheri_reg_t cap_load_cap(cheri_reg_t auth, reg_t authidx,
@@ -284,6 +285,7 @@ class cheri_t : public extension_t {
   store_func(uint16)
   store_func(uint32)
   store_func(uint64)
+  store_func(float128)
   #undef store_func
 
   inline void cap_store_cap(cheri_reg_t auth, reg_t authidx, int64_t offset,

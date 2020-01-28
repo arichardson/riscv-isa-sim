@@ -246,23 +246,23 @@ public:
       } \
     }
 
-  void store_float128(reg_t addr, float128_t val)
+  void store_float128(reg_t addr, float128_t val, reg_t *paddr = NULL)
   {
 #ifndef RISCV_ENABLE_MISALIGNED
     if (unlikely(addr & (sizeof(float128_t)-1)))
       throw trap_store_address_misaligned(addr);
 #endif
-    store_uint64(addr, val.v[0]);
+    store_uint64(addr, val.v[0], paddr);
     store_uint64(addr + 8, val.v[1]);
   }
 
-  float128_t load_float128(reg_t addr)
+  float128_t load_float128(reg_t addr, reg_t *paddr = NULL)
   {
 #ifndef RISCV_ENABLE_MISALIGNED
     if (unlikely(addr & (sizeof(float128_t)-1)))
       throw trap_load_address_misaligned(addr);
 #endif
-    return (float128_t){load_uint64(addr), load_uint64(addr + 8)};
+    return (float128_t){load_uint64(addr, paddr), load_uint64(addr + 8)};
   }
 
   // store value to memory at aligned address
