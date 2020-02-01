@@ -351,52 +351,52 @@ std::vector<disasm_insn_t*> cheri_t::get_disasms(int xlen) {
   }
 
   /* Memory Stores with Explicit Address Type Instructions */
-  DEFINE_INSN(sb_ddc, {&xrd, &amo_address})
-  DEFINE_INSN(sh_ddc, {&xrd, &amo_address})
-  DEFINE_INSN(sw_ddc, {&xrd, &amo_address})
+  DEFINE_INSN(sb_ddc, {&xrs1, &amo_address})
+  DEFINE_INSN(sh_ddc, {&xrs1, &amo_address})
+  DEFINE_INSN(sw_ddc, {&xrs1, &amo_address})
   if (xlen == 32) {
     DISASM_INSN("sc.ddc", sd_ddc, 0, 0, {&crs2, &amo_address})
   } else {
-    DEFINE_INSN(sd_ddc, {&xrd, &amo_address})
+    DEFINE_INSN(sd_ddc, {&xrs1, &amo_address})
     DISASM_INSN("sc.ddc", sq_ddc, 0, 0, {&crs2, &amo_address})
   }
 
-  DEFINE_INSN(sb_cap, {&xrd, &amo_capability})
-  DEFINE_INSN(sh_cap, {&xrd, &amo_capability})
-  DEFINE_INSN(sw_cap, {&xrd, &amo_capability})
+  DEFINE_INSN(sb_cap, {&xrs1, &amo_capability})
+  DEFINE_INSN(sh_cap, {&xrs1, &amo_capability})
+  DEFINE_INSN(sw_cap, {&xrs1, &amo_capability})
   if (xlen == 32) {
     DISASM_INSN("sc.cap", sd_cap, 0, 0, {&crs2, &amo_capability})
   } else {
-    DEFINE_INSN(sd_cap, {&xrd, &amo_capability})
+    DEFINE_INSN(sd_cap, {&xrs1, &amo_capability})
     DISASM_INSN("sc.cap", sq_cap, 0, 0, {&crs2, &amo_capability})
   }
 
-  DEFINE_INSN(sc_b_ddc, {&xrd, &amo_address})
-  DEFINE_INSN(sc_h_ddc, {&xrd, &amo_address})
-  DEFINE_INSN(sc_w_ddc, {&xrd, &amo_address})
+  DEFINE_INSN(sc_b_ddc, {&xrs1, &amo_address})
+  DEFINE_INSN(sc_h_ddc, {&xrs1, &amo_address})
+  DEFINE_INSN(sc_w_ddc, {&xrs1, &amo_address})
   if (xlen == 32) {
     DISASM_INSN("sc.c.ddc", sc_d_ddc, 0, 0, {&crs2, &amo_address})
   } else {
-    DEFINE_INSN(sc_d_ddc, {&xrd, &amo_address})
+    DEFINE_INSN(sc_d_ddc, {&xrs1, &amo_address})
     DISASM_INSN("sc.c.ddc", sc_q_ddc, 0, 0, {&crs2, &amo_address})
   }
 
-  DEFINE_INSN(sc_b_cap, {&xrd, &amo_capability})
-  DEFINE_INSN(sc_h_cap, {&xrd, &amo_capability})
-  DEFINE_INSN(sc_w_cap, {&xrd, &amo_capability})
+  DEFINE_INSN(sc_b_cap, {&xrs1, &amo_capability})
+  DEFINE_INSN(sc_h_cap, {&xrs1, &amo_capability})
+  DEFINE_INSN(sc_w_cap, {&xrs1, &amo_capability})
   if (xlen == 32) {
     DISASM_INSN("sc.c.cap", sc_d_ddc, 0, 0, {&crs2, &amo_capability})
   } else {
-    DEFINE_INSN(sc_d_cap, {&xrd, &amo_capability})
+    DEFINE_INSN(sc_d_cap, {&xrs1, &amo_capability})
     DISASM_INSN("sc.c.cap", sc_q_ddc, 0, 0, {&crs2, &amo_capability})
   }
 
   /* Memory-Access Instructions */
   if (xlen == 32) {
-    DISASM_INSN("lc", ld, 0, 0, {&crd, &store_capability})
+    DISASM_INSN("lc", ld, 0, 0, {&crd, &load_capability})
     DISASM_INSN("sc", sd, 0, 0, {&crs2, &store_capability})
   } else {
-    DISASM_INSN("lc", lq, 0, 0, {&crd, &store_capability})
+    DISASM_INSN("lc", lq, 0, 0, {&crd, &load_capability})
     DISASM_INSN("sc", sq, 0, 0, {&crs2, &store_capability})
   }
 
