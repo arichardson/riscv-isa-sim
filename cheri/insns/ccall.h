@@ -30,10 +30,10 @@ if (!CS1.tag) {
 } else if (new_pc & ~p->pc_alignment_mask()) {
   throw trap_instruction_address_misaligned(new_pc);
 } else {
-  set_pc(TO_ARCH_PC(new_pc));
   cheri_reg_t icc = CS1;
   icc.otype = OTYPE_UNSEALED;
   SET_SCR(CHERI_SCR_PCC, icc);
+  set_pc(TO_ARCH_PC(new_pc));
 
   /* IDC */
   cheri_reg_t idc = CS2;
