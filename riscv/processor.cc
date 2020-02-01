@@ -698,6 +698,9 @@ void processor_t::set_csr(int which, reg_t val)
         (1 << CAUSE_FETCH_PAGE_FAULT) |
         (1 << CAUSE_LOAD_PAGE_FAULT) |
         (1 << CAUSE_STORE_PAGE_FAULT);
+#ifdef ENABLE_CHERI
+      mask |= 1 << CAUSE_CHERI_TRAP;
+#endif
       state.medeleg = (state.medeleg & ~mask) | (val & mask);
       break;
     }
