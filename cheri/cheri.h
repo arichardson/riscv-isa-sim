@@ -247,9 +247,9 @@ class cheri_t : public extension_t {
   inline cheri_reg_t cap_load_cap(cheri_reg_t auth, reg_t authidx,
                                   int64_t offset) {
     reg_t addr =
-      memop_to_addr(auth, authidx, offset, sizeof(cheri_reg_t), /*load=*/true,
-                    /*store=*/false, /*execute=*/false, /*cap_op=*/true,
-                    /*store_local=*/false);
+      memop_to_addr(auth, authidx, offset, sizeof(cheri_reg_inmem_t),
+                    /*load=*/true, /*store=*/false, /*execute=*/false,
+                    /*cap_op=*/true, /*store_local=*/false);
     reg_t paddr;
     cheri_reg_inmem_t inmem = MMU.load_cheri_reg_inmem(addr, &paddr);
     bool tag = (auth.perms & BIT(CHERI_PERMIT_LOAD_CAPABILITY)) &&
