@@ -97,4 +97,12 @@ void cheri_reg_t::set_cursor(uint64_t new_cursor) {
 }
 
 const uint32_t cheri_reg_t::reset_ebt = CC128_RESET_EBT;
+
+uint64_t cheri_reg_t::representable_length(uint64_t len) {
+  return cc128_get_alignment_mask(len);
+}
+
+uint64_t cheri_reg_t::representable_alignment_mask(uint64_t len) {
+  return cc128_get_required_alignment(len);
+}
 #endif

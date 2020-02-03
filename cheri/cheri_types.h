@@ -109,6 +109,9 @@ struct cheri_reg_t {
     set_cursor(_base + offset);
   }
 
+  static uint64_t representable_length(uint64_t len);
+  static uint64_t representable_alignment_mask(uint64_t len);
+
   cheri_reg_t(uint64_t cursor = 0) {
     _base    = 0;
     _top     = MAX_CHERI_LENGTH;

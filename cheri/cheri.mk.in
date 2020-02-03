@@ -53,6 +53,8 @@ cheri_insn_list = \
 	ccall \
 	ctestsubset \
 	cspecialrw \
+	croundrepresentablelength \
+	crepresentablealignmentmask \
 	lb_ddc \
 	lbu_ddc \
 	lh_ddc \
