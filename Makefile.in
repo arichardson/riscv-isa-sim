@@ -97,6 +97,16 @@ LDFLAGS       := @LDFLAGS@
 LIBS          := @LIBS@
 LINK          := $(LD) -L. $(LDFLAGS) -Wl,-rpath,$(install_libs_dir) $(patsubst -L%,-Wl$(comma)-rpath$(comma)%,$(filter -L%,$(LDFLAGS)))
 
+
+ifeq ($(shell uname -s),Darwin)
+# macOS ld64 does not support --start-group/--end-group
+LD_START_GROUP:=
+LD_END_GROUP  :=
+else
+LD_START_GROUP:= -Wl,--start-group
+LD_END_GROUP  := -Wl,--end-group
+endif
+
 # Library creation
 
 AR            := @AR@
@@ -238,7 +248,7 @@ $$($(2)_test_objs) : %.o : %.cc
 	$(COMPILE) -c $$<
 
 $$($(2)_test_exes) : %-utst : %.t.o $$($(2)_test_libnames)
-	$(LINK) -o $$@ $$< -Wl,--start-group $$($(2)_test_libnames) -Wl,--end-group $(LIBS)
+	$(LINK) -o $$@ $$< $(LD_START_GROUP) $$($(2)_test_libnames) $(LD_END_GROUP) $(LIBS)
 
 $(2)_deps += $$($(2)_test_deps)
 $(2)_junk += \
@@ -265,7 +275,7 @@ $$($(2)_prog_objs) : %.o : %.cc
 	$(COMPILE) -c $$<
 
 $$($(2)_prog_exes) : % : %.o $$($(2)_prog_libnames)
-	$(LINK) -o $$@ $$< -Wl,--start-group $$($(2)_prog_libnames) -Wl,--end-group $(LIBS)
+	$(LINK) -o $$@ $$< $(LD_START_GROUP) $$($(2)_prog_libnames) $(LD_END_GROUP) $(LIBS)
 
 $(2)_deps += $$($(2)_prog_deps)
 $(2)_junk += $$($(2)_prog_objs) $$($(2)_prog_deps) $$($(2)_prog_exes)
@@ -280,7 +290,7 @@ $$($(2)_install_prog_objs) : %.o : %.cc $$($(2)_gen_hdrs)
 	$(COMPILE) -c $$<
 
 $$($(2)_install_prog_exes) : % : %.o $$($(2)_prog_libnames)
-	$(LINK) -o $$@ $$< -Wl,--start-group $$($(2)_prog_libnames) -Wl,--end-group $(LIBS)
+	$(LINK) -o $$@ $$< $(LD_START_GROUP) $$($(2)_prog_libnames) $(LD_END_GROUP) $(LIBS)
 
 $(2)_deps += $$($(2)_install_prog_deps)
 $(2)_junk += \
