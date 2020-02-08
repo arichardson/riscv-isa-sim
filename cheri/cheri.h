@@ -32,6 +32,7 @@
  */
 
 #include <config.h>
+#include <inttypes.h>
 #ifdef ENABLE_CHERI
 #ifndef _RISCV_CHERI_H
 #define _RISCV_CHERI_H
@@ -59,6 +60,9 @@
 
 #define NUM_CHERI_REGS 32
 
+#define FMT32_HEX "0x%08" PRIx32
+#define FMT64_HEX "0x%016" PRIx64
+
 #ifdef CHERI_MERGED_RF
 # define READ_CREG(reg) STATE.XPR[reg]
 # define WRITE_CREG(reg, val) ({ \
@@ -69,7 +73,11 @@
     p->rvfi_dii_output.rvfi_dii_rd_addr = (reg); \
   } \
   if(DEBUG) { \
-    fprintf(stderr, "x%lu <- t:%u s:%u perms:0x%08x type:0x%016x cursor:0x%016lx base:0x%016lx length:0x%1lx%016lx\n", (reg), wdata.tag, wdata.sealed(), wdata.perms, wdata.otype, wdata.cursor(), wdata.base(), (uint64_t) (wdata.length() >> 64), (uint64_t) wdata.length() & UINT64_MAX); \
+    fprintf(stderr, "x%lu <- t:%u s:%u perms:" FMT32_HEX " type:" FMT32_HEX \
+            " cursor:" FMT64_HEX " base:" FMT64_HEX " length:0x%1lx" FMT64_HEX \
+            "\n", (long)(reg), wdata.tag, wdata.sealed(), wdata.perms, wdata.otype, \
+            wdata.cursor(), wdata.base(), (long)(uint64_t) (wdata.length() >> 64), \
+            (uint64_t) wdata.length() & UINT64_MAX); \
   } \
 })
 #else/* CHERI_MERGED_RF */
